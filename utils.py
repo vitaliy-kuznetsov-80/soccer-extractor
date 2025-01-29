@@ -1,33 +1,31 @@
-from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver import Chrome
 from datetime import datetime
 import typing
-
-base_url = 'https://betcity.ru/ru/line/soccer'
+from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 
 # Получить DOM дерево страницы
-def get_page(line_game_id: str, is_screenshot: bool, filename: str) -> BeautifulSoup:
+def get_page(url: str, is_screenshot: bool, filename: str) -> Chrome:
     # Опции оптимизации загрузки
     options = webdriver.ChromeOptions()
-    # options.add_argument('--headless')
     options.add_argument('-no-sandbox')
     options.add_argument('--disable-gpu')
     options.add_argument("disable-infobars")
     options.add_argument('-disable-dev-shm-usage')
     options.add_argument("--disable-extensions")
+    # options.add_argument("--start-maximized")
     options.add_argument("--blink-settings=imagesEnabled=false")
     options.add_experimental_option('excludeSwitches', ['disable-popup-blocking'])
     options.add_experimental_option("prefs", {
         "profile.managed_default_content_settings.images": 2,
         'media_stream': 2,
-
-
     })
     driver = webdriver.Chrome(options)
 
-    # Запрос
-    url = base_url + '/' + line_game_id
-    driver.get(url)
+    driver.maximize_window() # Полноэкранный режим
+    driver.implicitly_wait(5)  # Время доп. ожидания загрузки, сек
+    driver.get(url) # Запрос получения страниц
 
     print('Страница получена')
 
@@ -35,39 +33,41 @@ def get_page(line_game_id: str, is_screenshot: bool, filename: str) -> Beautiful
     if is_screenshot:
         driver.save_screenshot(filename + '.png')
 
-    # Получение содержимого (DOM дерева)
-    page_source = driver.page_source
-    driver.quit()
+    return driver
 
-    print('Страница распарсена')
-
-    # Парсинг в объект
-    return BeautifulSoup(page_source, 'html.parser')
+# Проячем окно уведомления и кукисов
+def close_dialogs(driver: Chrome) -> None:
+    # Кнопка куки
+    cookie_button = driver.find_elements(By.CLASS_NAME, 'cookie-modal__button')[0]
+    cookie_button.click()
+    # Кнопка уведомленния
+    confirm_button = driver.find_elements(By.CLASS_NAME, 'push-confirm__button')[0]
+    confirm_button.click()
 
 # Очистка текста
 def clean_text(value: str) -> str:
-    return value.strip().replace('  ', ' ').replace('  ', ' ')
+    return value.strip().replace('\n', ' ').replace('  ', ' ').replace('  ', ' ')
 
 # Имя сохраняемых файлов
-def get_filename(line_game_id: str) -> str:
+def get_filename() -> str:
     current_date_time = datetime.now()
     time_stamp = current_date_time.strftime('%m.%d.%y %H.%M.%S')
-    return 'result_' + line_game_id.replace('/', '_') + '_' + time_stamp
+    return 'result_' + time_stamp
 
 # Парсинг строк таблицы блока
-def get_rows(dom_tree: BeautifulSoup, block_name: str) -> typing.List[str]:
+def get_rows(driver: Chrome, block_name: str) -> typing.List[str]:
     rows = []
     print('---' + block_name + '---')
 
     # Поиск заголовка
-    header = dom_tree.find('span', string=block_name)
+    header = driver.find_element(By.XPATH, "//span[starts-with(., '" + block_name + "')]")
     if header is None:
         print('Пусто')
         return rows
 
     # Поиск списка строк
-    block = header.parent.parent
-    table = block.find_all('div', class_="dops-item-row__section")
+    block = header.find_element(By.XPATH, '..//..')
+    table = block.find_elements(By.CLASS_NAME, 'dops-item-row__section')
 
     # Считываем строки
     for row in table:
@@ -117,3 +117,7 @@ def get_rows(dom_tree: BeautifulSoup, block_name: str) -> typing.List[str]:
 def get_value(rows: typing.List[str], name: str) -> str:
     cell_index = rows.index(name)
     return rows[cell_index + 1]
+
+# Клик по элементу
+def click(driver: Chrome, element: WebElement) -> None:
+    driver.execute_script("arguments[0].click();", element)
