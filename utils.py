@@ -6,7 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
 # Получить DOM дерево страницы
-def get_page(url: str, is_screenshot: bool, filename: str) -> Chrome:
+def get_page(url: str) -> Chrome:
     # Опции оптимизации загрузки
     options = webdriver.ChromeOptions()
     options.add_argument('-no-sandbox')
@@ -28,10 +28,6 @@ def get_page(url: str, is_screenshot: bool, filename: str) -> Chrome:
     driver.get(url) # Запрос получения страниц
 
     print('Страница получена')
-
-    # Скриншот
-    if is_screenshot:
-        driver.save_screenshot(filename + '.png')
 
     return driver
 
@@ -55,12 +51,12 @@ def get_filename() -> str:
     return 'result_' + time_stamp
 
 # Парсинг строк таблицы блока
-def get_rows(driver: Chrome, block_name: str) -> typing.List[str]:
+def get_rows(element: WebElement, block_name: str) -> typing.List[str]:
     rows = []
-    print('---' + block_name + '---')
+    print('  - ' + block_name)
 
     # Поиск заголовка
-    header = driver.find_element(By.XPATH, "//span[starts-with(., '" + block_name + "')]")
+    header = element.find_element(By.XPATH, "//span[text()='" + block_name + "']")
     if header is None:
         print('Пусто')
         return rows
@@ -109,7 +105,7 @@ def get_rows(driver: Chrome, block_name: str) -> typing.List[str]:
             rows.append(value3)
             print_value = print_value + ' | ' + header3 + ': ' + value3
 
-        print(print_value)
+        print('     ' + print_value)
 
     return rows
 

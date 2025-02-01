@@ -1,10 +1,6 @@
-# Параметры игры
-
-from selenium.webdriver import Chrome
-from xlrd import open_workbook
-from xlutils.copy import copy
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
+from xlwt import Worksheet
 
 import utils as u
 import typing as t
@@ -38,47 +34,47 @@ def get_outcome(header_line):
     }
 
 # Фора 0
-def get_fora_0(driver: Chrome, header_line):
+def get_fora_0(element: WebElement, header_line):
     fora_1 = header_line['fora1_0_value']
     fora_2 = header_line['fora2_0_value']
 
     # Если берём из таблицы
-    f1_in_table = header_line['fora1_0_key'] != 0
-    f2_in_table = header_line['fora2_0_key'] != 0
+    f1_in_table = header_line['fora1_0_key'] != '0'
+    f2_in_table = header_line['fora2_0_key'] != '0'
     if f1_in_table or f2_in_table:
-        rows = u.get_rows(driver, 'Фора')
+        rows = u.get_rows(element, 'Фора')
         if f1_in_table: fora_1 = u.get_value(rows, 'Ф1(0)')
         if f2_in_table: fora_2 = u.get_value(rows, 'Ф2(0)')
 
     return { '1': fora_1, '2': fora_2 }
 
 # Дв. исход
-def get_double_outcome(driver: Chrome):
-    rows = u.get_rows(driver, 'Двойной исход')
+def get_double_outcome(element: WebElement):
+    rows = u.get_rows(element, 'Двойной исход')
     return {
         '1X': u.get_value(rows, '1X'),
         'X2': u.get_value(rows, 'X2')
     }
 
 # Голы
-def get_goals(driver: Chrome):
-    rows = u.get_rows(driver, 'Голы')
+def get_goals(element: WebElement):
+    rows = u.get_rows(element, 'Голы')
     return {
         '1': u.get_value(rows, 'К1Забьет'),
         '2': u.get_value(rows, 'К2Забьет')
     }
 
 # Обе забьют
-def get_both_will_score(driver: Chrome):
-    rows = u.get_rows(driver, 'Обе забьют')
+def get_both_will_score(element: WebElement):
+    rows = u.get_rows(element, 'Обе забьют')
     return {
         'yes': u.get_value(rows, 'Да'),
         'no': u.get_value(rows, 'Нет')
     }
 
 # Тотал
-def get_total(driver: Chrome):
-    col_total = u.get_rows(driver, 'Тотал')
+def get_total(element: WebElement):
+    col_total = u.get_rows(element, 'Тотал')
 
     def get_total_mb(value):
         try:
@@ -100,42 +96,37 @@ def get_total(driver: Chrome):
     }
 
 # Исходы по таймам
-def get_outcome_by_time(driver: Chrome):
- rows = u.get_rows(driver, 'Исходы по таймам')
+def get_outcome_by_time(element: WebElement):
+ rows = u.get_rows(element, 'Исходы по таймам')
 
 # Доп. тоталы 1-й тайм
-def get_total_1time_extra(driver: Chrome):
-    rows = u.get_rows(driver, 'Доп. тоталы 1-й тайм')
+def get_total_1time_extra(element: WebElement):
+    rows = u.get_rows(element, 'Доп. тоталы 1-й тайм')
 
 # 1-й тайм забьет
-def get_will_score_1_time(driver: Chrome):
-    rows = u.get_rows(driver, '1-й тайм забьет')
+def get_will_score_1_time(element: WebElement):
+    rows = u.get_rows(element, '1-й тайм забьет')
 
 # Сохранение параметров в Excel
-def save_to_excel(driver: Chrome, header_line: t.List[str], filename: str):
+def save_to_excel(element: WebElement, header_line: t.List[str], sheet: Worksheet, row_index: int):
     outcome = get_outcome(header_line)
-    fora_0 = get_fora_0(driver, header_line)
-    double_result = get_double_outcome(driver)
-    goals = get_goals(driver)
-    both_will_score = get_both_will_score(driver)
-    total = get_total(driver)
+    fora_0 = get_fora_0(element, header_line)
+    double_result = get_double_outcome(element)
+    goals = get_goals(element)
+    both_will_score = get_both_will_score(element)
+    total = get_total(element)
 
-    col_index = 0
+    col_index = 6
 
     def write(value):
-        global col_index
+        nonlocal col_index
         # Если не вещественное число, то прочерк
         try:
             float(value)
-            sheet.write(2, col_index, float(value))
+            sheet.write(row_index, col_index, float(value))
         except ValueError:
-            sheet.write(2, col_index, '-')
+            sheet.write(row_index, col_index, '-')
         col_index = col_index + 1
-
-    # Открытие шаблона и создание копии
-    rb = open_workbook("template.xls", formatting_info=True)
-    wb = copy(rb)
-    sheet = wb.get_sheet(0)  # Первая книга
 
     write(outcome['1'])
     write(outcome['X'])
@@ -163,4 +154,3 @@ def save_to_excel(driver: Chrome, header_line: t.List[str], filename: str):
     write(total['4.5']['m'])
     write(total['4.5']['b'])
 
-    wb.save(filename + '.xls')
