@@ -4,8 +4,11 @@
 Установить зависимости
 
 ``
-pip3 install -r requirments.txt
+pip3 install -r requirements.txt
 ``
 
-
+## Запуск
+``
+py main.py
+``
  
