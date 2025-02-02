@@ -1,14 +1,17 @@
 from selenium import webdriver
 from datetime import datetime
+from typing import Union
 import typing
 from selenium.webdriver.common.by import By
+from selenium.webdriver.ie.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.common.exceptions import TimeoutException
 import time
 
 # Web драйвер
-global driver
+driver: Union[WebDriver, None] = None
 # Контенер, где находятся все игры (div class="container") (для сокращения времени поиска)
-global container
+container: Union[WebElement, None] = None
 
 # Получить DOM дерево страницы
 def get_page(url: str) -> None:
@@ -20,7 +23,6 @@ def get_page(url: str) -> None:
     options.add_argument("disable-infobars")
     options.add_argument('-disable-dev-shm-usage')
     options.add_argument("--disable-extensions")
-    # options.add_argument("--start-maximized")
     options.add_argument("--blink-settings=imagesEnabled=false")
     options.add_experimental_option('excludeSwitches', ['disable-popup-blocking'])
     options.add_experimental_option("prefs", {
@@ -28,11 +30,14 @@ def get_page(url: str) -> None:
         'media_stream': 2,
     })
     driver = webdriver.Chrome(options)
-
     driver.maximize_window() # Полноэкранный режим
-    time.sleep(1)  # Время доп. ожидания загрузки, сек
-    driver.get(url) # Запрос получения страниц
 
+    driver.set_page_load_timeout(5) # Тамаут принудительной оставновки загрузки
+    try:
+        driver.get(url) # Запрос получения страниц
+    except TimeoutException:
+        print('Принудительная остановка')
+        driver.execute_script("window.stop();")
     print('Страница получена')
 
 # Проячем окно уведомления и кукисов
@@ -59,23 +64,31 @@ def get_filename() -> str:
     return 'result_' + time_stamp
 
 # Парсинг строк таблицы блока
-def get_rows(element: WebElement, block_name: str) -> typing.List[str]:
+def get_rows(element: WebElement, block_name: str, block_column: str = '') -> typing.List[str]:
     rows = []
     print('  - ' + block_name)
 
     # Поиск заголовка
-    header = element.find_element(By.XPATH, "//span[text()='" + block_name + "']")
-    if header is None:
-        print('Пусто')
+    try:
+        header = element.find_element(By.XPATH, "//span[text()='" + block_name + "']")
+    except:
+        print('Таблица "' + block_name + '" не найдена')
         return rows
 
-    # Поиск списка строк
     block = header.find_element(By.XPATH, '..//..')
+
+    # Если строки объедены в блоки (напрмиер, Исходы по таймам)
+    if block_column != '':
+        path = "//div[@class='dops-item-row__title' and ./span[contains(.,'" + block_column + "')]]"
+        table_column = block.find_element(By.XPATH, path)
+        block = table_column.find_element(By.XPATH, '..')
+
+    # Поиск списка строк
     table = block.find_elements(By.CLASS_NAME, 'dops-item-row__section')
 
     # Считываем строки
     for row in table:
-        row_text = (clean_text(row.text)
+        row_text = (clean_text(row.text.strip())
                     .replace(' (', '(')
                     .replace('Не забьет', 'Незабьет')
                     .replace('Не будет', 'Небудет')
@@ -119,8 +132,11 @@ def get_rows(element: WebElement, block_name: str) -> typing.List[str]:
 
 # Значение в строке по названию
 def get_value(rows: typing.List[str], name: str) -> str:
-    cell_index = rows.index(name)
-    return rows[cell_index + 1]
+    if name in rows:
+        cell_index = rows.index(name)
+        return rows[cell_index + 1]
+    else:
+        return ''
 
 # Клик по элементу
 def click(element: WebElement) -> None:

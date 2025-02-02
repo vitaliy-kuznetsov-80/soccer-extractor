@@ -23,7 +23,7 @@ def get_ignore_list():
     return ignore_list
 
 # Пометка строк для получения игр
-def mark_lines():
+def mark_lines(limit_count):
     # Таблица парсинга. Берём только левую (СОБЫТИЯ)
     tables = u.container.find_elements(By.CLASS_NAME, 'champs__sport')[0]
 
@@ -37,11 +37,11 @@ def mark_lines():
     ignore_list = get_ignore_list() # Читаем слова-исключения из файла
     for row in rows:
         # Ограничние линий
-        if count > 1: break
+        if 0 < limit_count < count: break
 
         # Ссылка на линию с названием
         a = row.find_element(By.CLASS_NAME, 'champs__champ-name')
-        line_text = a.text
+        line_text = a.text.strip()
 
         # Игнор
         is_ignore = False
@@ -72,28 +72,31 @@ def load_games():
     WebDriverWait(u.driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, "line-event")))
 
 # Парсинг игр
-def parce_games(filename: str):
+def parce_games(filename: str, game_limit: int, only_id: str):
     # Открытие шаблона Excel и создание копии
     rb = open_workbook("template.xls", formatting_info=True)
     wb: Workbook = copy(rb)
     sheet: Worksheet = wb.get_sheet(0)  # Первая книга
     excel_row_index = 2 # Первый индекс строки в Excel
 
-    # only_id = '445/17570753' # Поиск конкретной игры
-
     # Строки игр
     rows = u.container.find_elements(By.CLASS_NAME, 'line-event')
+    row_count = len(rows)
+    print('\nИгр в обработке: ' + str(row_count))
+
     button_prev_play = None  # Запоминаем предыдущую кнопку для закрытия, перед открытием нового
     count = 0
     for row in rows:
         # Ограничние игр
-        if count > 1: break
+        if 0 < game_limit < count: break
 
         # Получение Id игры (для лога и отладки)
         a_elems = row.find_elements(By.TAG_NAME, 'a')
         id_href = a_elems[0].get_attribute('href')
         game_id = re.search('/ru/line/soccer/(.*)ts=24', id_href).group(1)[:-1]
-        # if id_href.find(only_id) == -1: continue # Расскоментировать для поиска конкретной игры
+        # Поиск конкртеной игры, если есть
+        if only_id != '':
+            if id_href.find(only_id) == -1: continue
 
         # Закрывем предыдущй
         if button_prev_play is not None:
@@ -108,7 +111,7 @@ def parce_games(filename: str):
         # Клик по раскрывашке (правая колонка)
         u.click(button_play)
         # Ожидаем прогрузки по названию таблицы нижней части коэффициентов (должна быть всегда)
-        waiting_path = "//span[starts-with(., 'Цифра в итоговом счете')]"
+        waiting_path = "//span[starts-with(., 'Тотал')]"
         WebDriverWait(u.driver, 10).until(ec.presence_of_element_located((By.XPATH, waiting_path)))
 
         # Парсинг игры
@@ -122,13 +125,12 @@ def parce_games(filename: str):
         excel_row_index = excel_row_index + 1
         count = count + 1
 
-    print('Обработано игр:: ' + str(count))
     wb.save('results/' + filename + '.xls')
 
 # Левая шапка. Прлучение и запись в Excel
 def write_left_header(excel_row_index: int, game_id: str, row: WebElement, sheet: Worksheet):
     # Время
-    time = row.find_element(By.CLASS_NAME, 'line-event__time-static').text.strip()
+    time_game = row.find_element(By.CLASS_NAME, 'line-event__time-static').text.strip()
 
     # Команды
     teams_block = row.find_element(By.CLASS_NAME, 'line-event__name-teams')
@@ -140,29 +142,32 @@ def write_left_header(excel_row_index: int, game_id: str, row: WebElement, sheet
     country_block: WebElement = row.find_element(By.XPATH, '..//..')
 
     # Игра
-    game = country_block.find_element(By.CLASS_NAME, 'line-champ__header-link').text
+    game = (country_block.find_element(By.CLASS_NAME, 'line-champ__header-link').text
+            .replace('Футбол.', '').strip())
 
     # Дата, Д/Н
-    date_parce = country_block.find_element(By.CLASS_NAME, 'line-champ__date').text
+    date_parce = country_block.find_element(By.CLASS_NAME, 'line-champ__date').text.strip()
     date_parce_list = date_parce.split(' ')
     date_number = int(date_parce_list[0].strip())
     months = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
     dws = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС']
     date_month = months.index(date_parce_list[1].strip()[:3].lower()) + 1
     date_year = datetime.now().year
-    date_orig = datetime(date_year, date_month, date_number)
+    date_obj = datetime(date_year, date_month, date_number)
     # Если полученая дата > текущей даты, то это прошлый год (стык декабрь / январь)
-    if date_orig > datetime.now():
-        date_orig = datetime(date_year - 1, date_month, date_number)
-    date = date_orig.strftime('%d.%m.%Y')  # Дата для отчёта
-    dw = dws[date_orig.weekday()]  # День недели
+    if date_obj > datetime.now():
+        date_obj = datetime(date_year - 1, date_month, date_number)
+    date_game = date_obj.strftime('%d.%m.%Y')  # Дата для отчёта
+    dw = dws[date_obj.weekday()]  # День недели
 
-    print('\n-- ' + date + ' : ' + game + ' : ' + team1 + ' / ' + team2 + ' : ' + game_id)
+    print('\n' + str(excel_row_index - 1) + ': ' +
+          date_obj.strftime('%d.%m.%y') + ' ' + time_game + ': ' +
+          game + ': ' + team1 + ' / ' + team2 + ': ' + game_id)
 
     # Сохранение в Excel
-    sheet.write(excel_row_index, 0, date)
+    sheet.write(excel_row_index, 0, date_game)
     sheet.write(excel_row_index, 1, dw)
-    sheet.write(excel_row_index, 2, time)
+    sheet.write(excel_row_index, 2, time_game)
     sheet.write(excel_row_index, 3, game)
     sheet.write(excel_row_index, 4, team1)
     sheet.write(excel_row_index, 5, team2)
