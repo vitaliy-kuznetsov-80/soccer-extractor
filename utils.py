@@ -1,12 +1,18 @@
 from selenium import webdriver
-from selenium.webdriver import Chrome
 from datetime import datetime
 import typing
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
+import time
+
+# Web драйвер
+global driver
+# Контенер, где находятся все игры (div class="container") (для сокращения времени поиска)
+global container
 
 # Получить DOM дерево страницы
-def get_page(url: str) -> Chrome:
+def get_page(url: str) -> None:
+    global driver
     # Опции оптимизации загрузки
     options = webdriver.ChromeOptions()
     options.add_argument('-no-sandbox')
@@ -24,21 +30,23 @@ def get_page(url: str) -> Chrome:
     driver = webdriver.Chrome(options)
 
     driver.maximize_window() # Полноэкранный режим
-    driver.implicitly_wait(5)  # Время доп. ожидания загрузки, сек
+    time.sleep(1)  # Время доп. ожидания загрузки, сек
     driver.get(url) # Запрос получения страниц
 
     print('Страница получена')
 
-    return driver
-
 # Проячем окно уведомления и кукисов
-def close_dialogs(driver: Chrome) -> None:
+def close_dialogs() -> None:
     # Кнопка куки
-    cookie_button = driver.find_elements(By.CLASS_NAME, 'cookie-modal__button')[0]
-    cookie_button.click()
+    cookie_buttons = driver.find_elements(By.CLASS_NAME, 'cookie-modal__button')
+    if len(cookie_buttons) > 0: cookie_buttons[0].click()
     # Кнопка уведомленния
-    confirm_button = driver.find_elements(By.CLASS_NAME, 'push-confirm__button')[0]
-    confirm_button.click()
+    confirm_buttons = driver.find_elements(By.CLASS_NAME, 'push-confirm__button')
+    if len(confirm_buttons) > 0: confirm_buttons[0].click()
+
+    time.sleep(0.5)
+
+    print('Диалоги закрыты')
 
 # Очистка текста
 def clean_text(value: str) -> str:
@@ -115,5 +123,10 @@ def get_value(rows: typing.List[str], name: str) -> str:
     return rows[cell_index + 1]
 
 # Клик по элементу
-def click(driver: Chrome, element: WebElement) -> None:
+def click(element: WebElement) -> None:
     driver.execute_script("arguments[0].click();", element)
+
+# Контейнер игр
+def get_container() -> None:
+    global container
+    container = driver.find_element(By.CLASS_NAME, 'container')
