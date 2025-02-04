@@ -179,7 +179,7 @@ def set_msk() -> None:
     u.click(button_settings)
 
     # Ждём загрузки окна
-    WebDriverWait(u.driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, "settings__body")))
+    WebDriverWait(u.driver, 3).until(ec.presence_of_element_located((By.CLASS_NAME, "settings__body")))
 
     # Выбираем Москву
     body = u.driver.find_element(By.CLASS_NAME, 'settings__body')
