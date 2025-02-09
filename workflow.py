@@ -5,7 +5,7 @@ from selenium.webdriver.support import expected_conditions as ec
 
 from xlrd import open_workbook
 from xlutils.copy import copy
-from datetime import datetime
+from datetime import date
 
 import time
 import re
@@ -14,6 +14,11 @@ from xlwt import Workbook, Worksheet
 
 import utils as u
 import params as p
+
+months = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
+dws = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС']
+date_current: date = date.today() # Текущая дата без времени
+year_current: int = date_current.year # Текущий год
 
 # Список фраз - исключений
 def get_ignore_list():
@@ -145,32 +150,38 @@ def write_left_header(excel_row_index: int, game_id: str, row: WebElement, sheet
     game = (country_block.find_element(By.CLASS_NAME, 'line-champ__header-link').text
             .replace('Футбол.', '').strip())
 
-    # Дата, Д/Н
+    # Дата в формате: {Дата} {Название месяца}. Например: 9 февраля
     date_parce = country_block.find_element(By.CLASS_NAME, 'line-champ__date').text.strip()
+    # Дата в формате: dd.mm
     date_parce_list = date_parce.split(' ')
-    date_number = int(date_parce_list[0].strip())
-    months = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
-    dws = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС']
-    date_month = months.index(date_parce_list[1].strip()[:3].lower()) + 1
-    date_year = datetime.now().year
-    date_obj = datetime(date_year, date_month, date_number)
-    # Если полученая дата > текущей даты, то это прошлый год (стык декабрь / январь)
-    if date_obj > datetime.now():
-        date_obj = datetime(date_year - 1, date_month, date_number)
-    date_game = date_obj.strftime('%d.%m.%Y')  # Дата для отчёта
-    dw = dws[date_obj.weekday()]  # День недели
+    date_number: int = int(date_parce_list[0].strip()) # Номер даты
+    date_month: int = months.index(date_parce_list[1].strip()[:3].lower()) + 1 # Номер месяца
+    date_game: date = date(year_current, date_month, date_number) # Текущая дата (полная)
+    date_game = fix_date_between_years(date_game, date_month, date_number) # Корректировка даты
+    date_game_report: str = date_game.strftime('%d.%m.%Y')  # Дата для отчёта
+    weekday = dws[date_game.weekday()]  # День недели
 
     print('\n' + str(excel_row_index - 1) + ': ' +
-          date_obj.strftime('%d.%m.%y') + ' ' + time_game + ': ' +
+          date_game.strftime('%d.%m.%y') + ' ' + time_game + ': ' +
           game + ': ' + team1 + ' / ' + team2 + ': ' + game_id)
 
     # Сохранение в Excel
-    sheet.write(excel_row_index, 0, date_game)
-    sheet.write(excel_row_index, 1, dw)
+    sheet.write(excel_row_index, 0, date_game_report)
+    sheet.write(excel_row_index, 1, weekday)
     sheet.write(excel_row_index, 2, time_game)
     sheet.write(excel_row_index, 3, game)
     sheet.write(excel_row_index, 4, team1)
     sheet.write(excel_row_index, 5, team2)
+
+# Если полученая дата > текущей даты, то это прошлый год (стык декабрь / январь)
+def fix_date_between_years(date_game, date_month, date_number):
+    # Текущая дата - 1 день, для учёта смещения поясов
+    date_game_add_day: date = date(year_current, date_month, date_number - 1)
+
+    if date_game_add_day > date_current:
+        date_game = date(year_current - 1, date_month, date_number)
+
+    return date_game
 
 # Выбор часового пояса МСК
 def set_msk() -> None:

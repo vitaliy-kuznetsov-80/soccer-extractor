@@ -15,7 +15,7 @@ base_url = 'https://betcity.ru/ru/line/soccer?ts=24' # Url списка лини
 filename = u.get_filename() # Имя фалйла скрина и Excel
 
 if not log_in_console:
-    sys.stdout = open('results/log_' + filename, 'w', encoding='utf-8') # Вывод консоли в файл
+    sys.stdout = open('results/log_' + filename + '.log', 'w', encoding='utf-8') # Вывод консоли в файл
 
 print('Старт')
 start_time = datetime.now()
