@@ -45,29 +45,29 @@ def get_fora_0(element: WebElement, header_line):
     f1_in_table = header_line['fora1_0_key'] != '0'
     f2_in_table = header_line['fora2_0_key'] != '0'
     if f1_in_table or f2_in_table:
-        rows = u.get_rows(element, 'Фора')
+        rows = u.get_rows(element, 'Фора', 2)
         if f1_in_table: fora_1 = u.get_value(rows, 'Ф1(0)')
         if f2_in_table: fora_2 = u.get_value(rows, 'Ф2(0)')
 
     return { '1': fora_1, '2': fora_2 }
 
-# Дв. исход
+# Двойной исход
 def get_double_outcome(element: WebElement):
-    rows = u.get_rows(element, 'Двойной исход')
+    rows = u.get_rows(element, 'Двойной исход', 2)
     value_1x = u.get_value(rows, '1X')
     value_x2 = u.get_value(rows, 'X2')
     return { '1X': value_1x, 'X2': value_x2 }
 
 # Голы
 def get_goals(element: WebElement):
-    rows = u.get_rows(element, 'Голы')
+    rows = u.get_rows(element, 'Голы', 2)
     g1 = u.get_value(rows, 'К1Забьет')
     g2 = u.get_value(rows, 'К2Забьет')
     return { '1': g1, '2': g2 }
 
 # Обе забьют
 def get_both_will_score(element: WebElement):
-    rows = u.get_rows(element, 'Обе забьют')
+    rows = u.get_rows(element, 'Обе забьют', 2)
     return {
         'yes': u.get_value(rows, 'Да'),
         'no': u.get_value(rows, 'Нет')
@@ -76,7 +76,7 @@ def get_both_will_score(element: WebElement):
 def get_mb(rows: t.List[str], value: str):
     try:
         index = rows.index(value)
-    except:
+    except Exception:
         return { 'm': '', 'b': '' }
     m = rows[index + 1]
     b = rows[index + 3]
@@ -84,7 +84,7 @@ def get_mb(rows: t.List[str], value: str):
 
 # Тотал
 def get_total(element: WebElement, header_line):
-    rows = u.get_rows(element, 'Тотал')
+    rows = u.get_rows(element, 'Тотал', 2)
 
     result = {
         '1.5': get_mb(rows, '1.5Мен'),
@@ -107,14 +107,14 @@ def get_total(element: WebElement, header_line):
 
 # Исходы по таймам (1т, ТБ 1, 1.5)
 def get_outcome_by_time_1t(element: WebElement):
- rows = u.get_rows(element, 'Исходы по таймам', '1-й тайм')
+ rows = u.get_rows(element, 'Исходы по таймам', 2, '1-й тайм')
  tb1 = get_mb(rows, 'ТБ(1)')['m']
  tb1_5 = get_mb(rows, 'ТБ(1.5)')['m']
  return { '1': tb1, '1.5': tb1_5 }
 
 # Доп. тоталы 1-й тайм
 def get_total_1time_extra(element: WebElement):
-    rows = u.get_rows(element, 'Доп. тоталы 1-й тайм')
+    rows = u.get_rows(element, 'Доп. тоталы 1-й тайм', 2)
     value_1b = get_mb(rows, '1Мен')['b']
     value_2b = get_mb(rows, '2Мен')['b']
     return {'1': value_1b, '2': value_2b}
@@ -130,7 +130,7 @@ def get_total_1time(element: WebElement):
 
 # 1-й тайм забьет
 def get_will_score_1_time(element: WebElement):
-    rows = u.get_rows(element, '1-й тайм забьет')
+    rows = u.get_rows(element, '1-й тайм забьет', 2)
     k1 = u.get_value(rows, 'K1Да')
     k2 = u.get_value(rows, 'K2Да')
     return {'1': k1, '2': k2}
@@ -138,11 +138,11 @@ def get_will_score_1_time(element: WebElement):
 # Сохранение параметров в Excel
 def save_to_excel(element: WebElement, header_line: t.List[str], sheet: Worksheet, row_index: int):
     outcome = get_outcome(header_line)
-    fora_0 = get_fora_0(element, header_line)
+    total = get_total(element, header_line)
     double_result = get_double_outcome(element)
+    fora_0 = get_fora_0(element, header_line)
     goals = get_goals(element)
     both_will_score = get_both_will_score(element)
-    total = get_total(element, header_line)
     will_score_1_time = get_will_score_1_time(element)
     total_1time = get_total_1time(element)
 

@@ -64,7 +64,7 @@ def get_filename() -> str:
     return 'result_' + time_stamp
 
 # Парсинг строк таблицы блока
-def get_rows(element: WebElement, block_name: str, block_column: str = '') -> typing.List[str]:
+def get_rows(element: WebElement, block_name: str, col_count: int, block_column: str = '') -> typing.List[str]:
     rows = []
     print('  - ' + block_name)
 
@@ -117,11 +117,26 @@ def get_rows(element: WebElement, block_name: str, block_column: str = '') -> ty
             rows.append(header2)
             rows.append(value2)
             print_value = print_value + ' | ' + header2 + ': ' + value2
+        # Должна быть 2 колонка, но её нет
+        if len(cols) < 3 and col_count == 2:
+            header2 = ''
+            value2 = ''
+            rows.append(header2)
+            rows.append(value2)
+            print_value = print_value + ' | ' + header2 + ': ' + value2
+
 
         # 3 колонка
         if len(cols) > 5:
             header3 = cols[4]
             value3 = cols[5]
+            rows.append(header3)
+            rows.append(value3)
+            print_value = print_value + ' | ' + header3 + ': ' + value3
+        # Должна быть 2 колонка, но её нет
+        if len(cols) < 5 and col_count == 3:
+            header3 = ''
+            value3 = ''
             rows.append(header3)
             rows.append(value3)
             print_value = print_value + ' | ' + header3 + ': ' + value3
