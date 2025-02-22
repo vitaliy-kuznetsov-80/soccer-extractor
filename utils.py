@@ -32,7 +32,7 @@ def get_page(url: str) -> None:
     driver = webdriver.Chrome(options)
     driver.maximize_window() # Полноэкранный режим
 
-    driver.set_page_load_timeout(5) # Тамаут принудительной оставновки загрузки
+    driver.set_page_load_timeout(10) # Тамаут принудительной оставновки загрузки
     try:
         driver.get(url) # Запрос получения страниц
     except TimeoutException:
@@ -43,11 +43,18 @@ def get_page(url: str) -> None:
 # Проячем окно уведомления и кукисов
 def close_dialogs() -> None:
     # Кнопка куки
-    cookie_buttons = driver.find_elements(By.CLASS_NAME, 'cookie-modal__button')
-    if len(cookie_buttons) > 0: cookie_buttons[0].click()
+    try:
+        cookie_buttons = driver.find_elements(By.CLASS_NAME, 'cookie-modal__button')
+        if len(cookie_buttons) > 0: cookie_buttons[0].click()
+    except:
+        print('Кнопка куки не найдена')
+
     # Кнопка уведомленния
-    confirm_buttons = driver.find_elements(By.CLASS_NAME, 'push-confirm__button')
-    if len(confirm_buttons) > 0: confirm_buttons[0].click()
+    try:
+        confirm_buttons = driver.find_elements(By.CLASS_NAME, 'push-confirm__button')
+        if len(confirm_buttons) > 0: confirm_buttons[0].click()
+    except:
+        print('Кнопка уведомленния не найдена')
 
     time.sleep(0.5)
 
@@ -79,9 +86,9 @@ def get_rows(element: WebElement, block_name: str, col_count: int, block_column:
 
     # Если строки объедены в блоки (напрмиер, Исходы по таймам)
     if block_column != '':
-        path = "//div[@class='dops-item-row__title' and ./span[contains(.,'" + block_column + "')]]"
+        path = "//span[contains(text(),'" + block_column + "')]"
         table_column = block.find_element(By.XPATH, path)
-        block = table_column.find_element(By.XPATH, '..')
+        block = table_column.find_element(By.XPATH, '..//..')
 
     # Поиск списка строк
     table = block.find_elements(By.CLASS_NAME, 'dops-item-row__section')

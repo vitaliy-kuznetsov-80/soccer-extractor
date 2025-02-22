@@ -115,16 +115,21 @@ def parce_games(filename: str, game_limit: int, only_id: str):
         if button_play.tag_name != 'button': continue  # Игнор не кнопок
         # Клик по раскрывашке (правая колонка)
         u.click(button_play)
-        # Ожидаем прогрузки по названию таблицы нижней части коэффициентов (должна быть всегда)
-        waiting_path = "//span[starts-with(., 'Тотал')]"
-        WebDriverWait(u.driver, 10).until(ec.presence_of_element_located((By.XPATH, waiting_path)))
+        is_exist = True
+        try:
+            # Ожидаем прогрузки по названию таблицы нижней части коэффициентов (должна быть всегда)
+            waiting_path = "//span[starts-with(., 'Тотал')]"
+            WebDriverWait(u.driver, 10).until(ec.presence_of_element_located((By.XPATH, waiting_path)))
+        except BaseException as e:
+            is_exist = False
+            print("Игра отсутствует. Таймаут")
 
-        # Парсинг игры
-        header_line = p.get_header_params(row)
-
-        # Получение и запись коэффициентов
-        row_area = row.find_element(By.XPATH, '..')
-        p.save_to_excel(row_area, header_line, sheet, excel_row_index)
+        if is_exist:
+            # Парсинг игры
+            header_line = p.get_header_params(row)
+            # Получение и запись коэффициентов
+            row_area = row.find_element(By.XPATH, '..')
+            p.save_to_excel(row_area, header_line, sheet, excel_row_index)
 
         button_prev_play = button_play  # Запоминаем кнопку раскрытия
         excel_row_index = excel_row_index + 1
