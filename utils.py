@@ -68,7 +68,7 @@ def clean_text(value: str) -> str:
 def get_filename() -> str:
     current_date_time = datetime.now()
     time_stamp = current_date_time.strftime('%m.%d.%y %H.%M.%S')
-    return 'result_' + time_stamp
+    return '_' + time_stamp
 
 # Парсинг строк таблицы блока
 def get_rows(element: WebElement, block_name: str, col_count: int, block_column: str = '') -> typing.List[str]:

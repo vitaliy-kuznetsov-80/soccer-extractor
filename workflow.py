@@ -135,9 +135,9 @@ def parce_games(filename: str, game_limit: int, only_id: str):
         excel_row_index = excel_row_index + 1
         count = count + 1
 
-    wb.save('results/' + filename + '.xls')
+    wb.save('results/result' + filename + '.xls')
 
-# Левая шапка. Прлучение и запись в Excel
+# Левая шапка. Получение и запись в Excel
 def write_left_header(excel_row_index: int, game_id: str, row: WebElement, sheet: Worksheet):
     # Время
     time_game = row.find_element(By.CLASS_NAME, 'line-event__time-static').text.strip()
@@ -162,7 +162,6 @@ def write_left_header(excel_row_index: int, game_id: str, row: WebElement, sheet
     date_number: int = int(date_parce_list[0].strip()) # Номер даты
     date_month: int = months.index(date_parce_list[1].strip()[:3].lower()) + 1 # Номер месяца
     date_game: date = date(year_current, date_month, date_number) # Текущая дата (полная)
-    date_game = fix_date_between_years(date_game, date_month, date_number) # Корректировка даты
     date_game_report: str = date_game.strftime('%d.%m.%Y')  # Дата для отчёта
     weekday = dws[date_game.weekday()]  # День недели
 
@@ -177,16 +176,6 @@ def write_left_header(excel_row_index: int, game_id: str, row: WebElement, sheet
     sheet.write(excel_row_index, 3, game)
     sheet.write(excel_row_index, 4, team1)
     sheet.write(excel_row_index, 5, team2)
-
-# Если полученая дата > текущей даты, то это прошлый год (стык декабрь / январь)
-def fix_date_between_years(date_game, date_month, date_number):
-    # Текущая дата - 1 день, для учёта смещения поясов
-    date_game_add_day: date = date(year_current, date_month, date_number - 1)
-
-    if date_game_add_day > date_current:
-        date_game = date(year_current - 1, date_month, date_number)
-
-    return date_game
 
 # Выбор часового пояса МСК
 def set_msk() -> None:
