@@ -86,7 +86,7 @@ def get_rows(element: WebElement, block_name: str, col_count: int, block_column:
 
     # Если строки объедены в блоки (напрмиер, Исходы по таймам)
     if block_column != '':
-        path = "//span[contains(text(),'" + block_column + "')]"
+        path = "//div[contains(@class, 'dops-item-row')]//div[contains(@class, 'dops-item-row__title')]//span[contains(text(),'" + block_column + "')]"
         table_column = block.find_element(By.XPATH, path)
         block = table_column.find_element(By.XPATH, '..//..')
 
