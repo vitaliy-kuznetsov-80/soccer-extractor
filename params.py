@@ -76,7 +76,7 @@ def get_both_will_score(element: WebElement):
 def get_mb(rows: t.List[str], value: str):
     try:
         index = rows.index(value)
-    except Exception:
+    except (Exception,):
         return { 'm': '', 'b': '' }
     m = rows[index + 1]
     b = rows[index + 3]

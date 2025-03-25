@@ -46,14 +46,14 @@ def close_dialogs() -> None:
     try:
         cookie_buttons = driver.find_elements(By.CLASS_NAME, 'cookie-modal__button')
         if len(cookie_buttons) > 0: cookie_buttons[0].click()
-    except:
+    except (Exception,):
         print('Кнопка куки не найдена')
 
     # Кнопка уведомленния
     try:
         confirm_buttons = driver.find_elements(By.CLASS_NAME, 'push-confirm__button')
         if len(confirm_buttons) > 0: confirm_buttons[0].click()
-    except:
+    except (Exception,):
         print('Кнопка уведомленния не найдена')
 
     time.sleep(0.5)
@@ -78,17 +78,21 @@ def get_rows(element: WebElement, block_name: str, col_count: int, block_column:
     # Поиск заголовка
     try:
         header = element.find_element(By.XPATH, "//span[text()='" + block_name + "']")
-    except:
+    except (Exception,):
         print('Таблица "' + block_name + '" не найдена')
         return rows
 
-    block = header.find_element(By.XPATH, '..//..')
+    block: WebElement = header.find_element(By.XPATH, '..//..')
 
     # Если строки объедены в блоки (напрмиер, Исходы по таймам)
     if block_column != '':
-        path = "//div[contains(@class, 'dops-item-row')]//div[contains(@class, 'dops-item-row__title')]//span[contains(text(),'" + block_column + "')]"
-        table_column = block.find_element(By.XPATH, path)
-        block = table_column.find_element(By.XPATH, '..//..')
+        try:
+            path = "//div[contains(@class, 'dops-item-row')]//div[contains(@class, 'dops-item-row__title')]//span[contains(text(),'" + block_column + "')]"
+            table_column = block.find_element(By.XPATH, path)
+            block = table_column.find_element(By.XPATH, '..//..')
+        except (Exception,):
+            print('Блок "' + block_column + '" в таблице "' + block_name + '" не найден')
+            return rows
 
     # Поиск списка строк
     table = block.find_elements(By.CLASS_NAME, 'dops-item-row__section')
