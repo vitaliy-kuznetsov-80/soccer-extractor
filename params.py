@@ -1,12 +1,15 @@
-from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
-from xlwt import Worksheet
+"""Методы парсинга"""
 
-import utils as u
 import typing as t
 
-# Параметры заголовка игры
+from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
+import xlwt
+
+import utils as u
+
 def get_header_params(row: WebElement):
+    """Параметры заголовка игры"""
     # Линия заголовка. Массив значений
     div_line_div = row.find_element(By.CLASS_NAME, "line-event__main-bets")
     # Парсинг заголовка
@@ -28,16 +31,16 @@ def get_header_params(row: WebElement):
         'total_b_value': header_line[9],
     }
 
-# Исходы
 def get_outcome(header_line):
+    """Исходы"""
     return {
         '1': header_line['outcome_1'],
         'X': header_line['outcome_X'],
         '2': header_line['outcome_2']
     }
 
-# Фора 0
 def get_fora_0(element: WebElement, header_line):
+    """Фора 0"""
     fora_1 = header_line['fora1_0_value']
     fora_2 = header_line['fora2_0_value']
 
@@ -46,27 +49,29 @@ def get_fora_0(element: WebElement, header_line):
     f2_in_table = header_line['fora2_0_key'] != '0'
     if f1_in_table or f2_in_table:
         rows = u.get_rows(element, 'Фора', 2)
-        if f1_in_table: fora_1 = u.get_value(rows, 'Ф1(0)')
-        if f2_in_table: fora_2 = u.get_value(rows, 'Ф2(0)')
+        if f1_in_table:
+            fora_1 = u.get_value(rows, 'Ф1(0)')
+        if f2_in_table:
+            fora_2 = u.get_value(rows, 'Ф2(0)')
 
     return { '1': fora_1, '2': fora_2 }
 
-# Двойной исход
 def get_double_outcome(element: WebElement):
+    """Двойной исход"""
     rows = u.get_rows(element, 'Двойной исход', 2)
     value_1x = u.get_value(rows, '1X')
     value_x2 = u.get_value(rows, 'X2')
     return { '1X': value_1x, 'X2': value_x2 }
 
-# Голы
 def get_goals(element: WebElement):
+    """Голы"""
     rows = u.get_rows(element, 'Голы', 2)
     g1 = u.get_value(rows, 'К1Забьет')
     g2 = u.get_value(rows, 'К2Забьет')
     return { '1': g1, '2': g2 }
 
-# Обе забьют
 def get_both_will_score(element: WebElement):
+    """Обе забьют"""
     rows = u.get_rows(element, 'Обе забьют', 2)
     return {
         'yes': u.get_value(rows, 'Да'),
@@ -74,16 +79,17 @@ def get_both_will_score(element: WebElement):
     }
 
 def get_mb(rows: t.List[str], value: str):
+    """Получить M, B"""
     try:
         index = rows.index(value)
-    except (Exception,):
+    except ValueError:
         return { 'm': '', 'b': '' }
     m = rows[index + 1]
     b = rows[index + 3]
     return { 'm': m, 'b': b }
 
-# Тотал
 def get_total(element: WebElement, header_line):
+    """Тотал"""
     rows = u.get_rows(element, 'Тотал', 2)
 
     result = {
@@ -105,38 +111,42 @@ def get_total(element: WebElement, header_line):
 
     return result
 
-# Исходы по таймам (1т, ТБ 1, 1.5)
 def get_outcome_by_time_1t(element: WebElement):
- rows = u.get_rows(element, 'Исходы по таймам', 2, '1-й тайм')
- tb1 = get_mb(rows, 'ТБ(1)')['m']
- tb1_5 = get_mb(rows, 'ТБ(1.5)')['m']
- return { '1': tb1, '1.5': tb1_5 }
+    """Исходы по таймам (1т, ТБ 1, 1.5)"""
+    rows = u.get_rows(element, 'Исходы по таймам', 2, '1-й тайм')
+    tb1 = get_mb(rows, 'ТБ(1)')['m']
+    tb1_5 = get_mb(rows, 'ТБ(1.5)')['m']
+    return { '1': tb1, '1.5': tb1_5 }
 
-# Доп. тоталы 1-й тайм
 def get_total_1time_extra(element: WebElement):
+    """Доп. тоталы 1-й тайм"""
     rows = u.get_rows(element, 'Доп. тоталы 1-й тайм', 2)
     value_1b = get_mb(rows, '1Мен')['b']
     value_2b = get_mb(rows, '2Мен')['b']
     return {'1': value_1b, '2': value_2b}
 
 def get_total_1time(element: WebElement):
+    """get total 1 time"""
     total_1time_extra = get_total_1time_extra(element)
     outcome_by_time_1t = get_outcome_by_time_1t(element)
+
     t1 = total_1time_extra['1']
-    if t1 == '': t1 = outcome_by_time_1t['1']
+    if t1 == '':
+        t1 = outcome_by_time_1t['1']
+
     t1_5 = outcome_by_time_1t['1.5']
     t2 = total_1time_extra['2']
     return {'1': t1, '1.5': t1_5, '2': t2}
 
-# 1-й тайм забьет
 def get_will_score_1_time(element: WebElement):
+    """1-й тайм забьет"""
     rows = u.get_rows(element, '1-й тайм забьет', 2)
     k1 = u.get_value(rows, 'K1Да')
     k2 = u.get_value(rows, 'K2Да')
     return {'1': k1, '2': k2}
 
-# Сохранение параметров в Excel
-def save_to_excel(element: WebElement, header_line: t.List[str], sheet: Worksheet, row_index: int):
+def save_to_excel(element: WebElement, header_line: t.List[str], sheet: xlwt.Worksheet, row_index: int):
+    """Сохранение параметров в Excel"""
     outcome = get_outcome(header_line)
     total = get_total(element, header_line)
     double_result = get_double_outcome(element)
@@ -155,7 +165,8 @@ def save_to_excel(element: WebElement, header_line: t.List[str], sheet: Workshee
             float(value)
             sheet.write(row_index, col_index, float(value))
         except ValueError:
-            sheet.write(row_index, col_index, '')
+            style = xlwt.easyxf('pattern: pattern solid, fore_colour empty_color')
+            sheet.write(row_index, col_index, '', style)
         col_index = col_index + 1
 
     write(outcome['1'])
@@ -195,4 +206,3 @@ def save_to_excel(element: WebElement, header_line: t.List[str], sheet: Workshee
 
     write(will_score_1_time['1'])
     write(will_score_1_time['2'])
-

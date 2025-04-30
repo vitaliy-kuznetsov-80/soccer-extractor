@@ -1,3 +1,11 @@
+"""Методы парсинга"""
+
+from datetime import date
+
+import time
+import re
+
+from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.ui import WebDriverWait
@@ -5,30 +13,25 @@ from selenium.webdriver.support import expected_conditions as ec
 
 from xlrd import open_workbook
 from xlutils.copy import copy
-from datetime import date
-
-import time
-import re
-
-from xlwt import Workbook, Worksheet
+from xlwt import Workbook, Worksheet, add_palette_colour
 
 import utils as u
 import params as p
 
-months = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
+months = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
 dws = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС']
 date_current: date = date.today() # Текущая дата без времени
 year_current: int = date_current.year # Текущий год
 
-# Список фраз - исключений
 def get_ignore_list():
-    file = open('ignore-soccer.txt', encoding='utf-8')
-    ignore_list = file.read().splitlines()
-    file.close()
-    return ignore_list
+    """Список фраз - исключений"""
+    with open('ignore-soccer.txt', encoding='utf-8') as file:
+        ignore_list = file.read().splitlines()
+        file.close()
+        return ignore_list
 
-# Пометка строк для получения игр
 def mark_lines(limit_count):
+    """Пометка строк для получения игр"""
     # Таблица парсинга. Берём только левую (СОБЫТИЯ)
     tables = u.container.find_elements(By.CLASS_NAME, 'champs__sport')[0]
 
@@ -42,7 +45,8 @@ def mark_lines(limit_count):
     ignore_list = get_ignore_list() # Читаем слова-исключения из файла
     for row in rows:
         # Ограничние линий
-        if 0 < limit_count < count: break
+        if 0 < limit_count < count:
+            break
 
         # Ссылка на линию с названием
         a = row.find_element(By.CLASS_NAME, 'champs__champ-name')
@@ -67,8 +71,8 @@ def mark_lines(limit_count):
         count = count + 1
     print('Фильтрованых линий: ' + str(count))
 
-# Загрузка игр для выбранных линий
 def load_games():
+    """Загрузка игр для выбранных линий"""
     # Жмём "Показать" для отображения игр
     button_find = u.container.find_element(By.CLASS_NAME, 'line__controls-button')
     u.click(button_find)
@@ -76,11 +80,13 @@ def load_games():
     # Ждём загрузки игр
     WebDriverWait(u.driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, "line-event")))
 
-# Парсинг игр
 def parce_games(filename: str, game_limit: int, only_id: str):
+    """Парсинг игр"""
     # Открытие шаблона Excel и создание копии
     rb = open_workbook("template.xls", formatting_info=True)
     wb: Workbook = copy(rb)
+    add_palette_colour("empty_color", 0x21)
+    wb.set_colour_RGB(0x21, 255, 150, 150)
     sheet: Worksheet = wb.get_sheet(0)  # Первая книга
     excel_row_index = 2 # Первый индекс строки в Excel
 
@@ -93,7 +99,8 @@ def parce_games(filename: str, game_limit: int, only_id: str):
     count = 0
     for row in rows:
         # Ограничние игр
-        if 0 < game_limit < count: break
+        if 0 < game_limit < count:
+            break
 
         # Получение Id игры (для лога и отладки)
         a_elems = row.find_elements(By.TAG_NAME, 'a')
@@ -101,7 +108,8 @@ def parce_games(filename: str, game_limit: int, only_id: str):
         game_id = re.search('/ru/line/soccer/(.*)ts=24', id_href).group(1)[:-1]
         # Поиск конкртеной игры, если есть
         if only_id != '':
-            if id_href.find(only_id) == -1: continue
+            if id_href.find(only_id) == -1:
+                continue
 
         # Закрывем предыдущй
         if button_prev_play is not None:
@@ -112,7 +120,8 @@ def parce_games(filename: str, game_limit: int, only_id: str):
 
         # Кнопка раскрытия игры
         button_play = row.find_element(By.CLASS_NAME, 'line-event__dops-toggle')
-        if button_play.tag_name != 'button': continue  # Игнор не кнопок
+        if button_play.tag_name != 'button':
+            continue  # Игнор не кнопок
         # Клик по раскрывашке (правая колонка)
         u.click(button_play)
         is_exist = True
@@ -120,7 +129,7 @@ def parce_games(filename: str, game_limit: int, only_id: str):
             # Ожидаем прогрузки по названию таблицы нижней части коэффициентов (должна быть всегда)
             waiting_path = "//span[starts-with(., 'Тотал')]"
             WebDriverWait(u.driver, 10).until(ec.presence_of_element_located((By.XPATH, waiting_path)))
-        except BaseException as e:
+        except NoSuchElementException:
             is_exist = False
             print("Игра отсутствует. Таймаут")
 
@@ -137,8 +146,8 @@ def parce_games(filename: str, game_limit: int, only_id: str):
 
     wb.save('results/result' + filename + '.xls')
 
-# Левая шапка. Получение и запись в Excel
 def write_left_header(excel_row_index: int, game_id: str, row: WebElement, sheet: Worksheet):
+    """Левая шапка. Получение и запись в Excel"""
     # Время
     time_game = row.find_element(By.CLASS_NAME, 'line-event__time-static').text.strip()
 
@@ -177,8 +186,8 @@ def write_left_header(excel_row_index: int, game_id: str, row: WebElement, sheet
     sheet.write(excel_row_index, 4, team1)
     sheet.write(excel_row_index, 5, team2)
 
-# Выбор часового пояса МСК
 def set_msk() -> None:
+    """Выбор часового пояса МСК"""
     # Кнопка настроек
     button_settings = u.driver.find_element(By.CLASS_NAME, 'sub-header__icon-settings')
     u.click(button_settings)

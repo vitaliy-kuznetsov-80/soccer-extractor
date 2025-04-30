@@ -1,20 +1,22 @@
-from selenium import webdriver
+"""Утилитные функции"""
+
+import time
 from datetime import datetime
 from typing import Union
 import typing
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.ie.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
-from selenium.common.exceptions import TimeoutException
-import time
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 # Web драйвер
 driver: Union[WebDriver, None] = None
 # Контенер, где находятся все игры (div class="container") (для сокращения времени поиска)
 container: Union[WebElement, None] = None
 
-# Получить DOM дерево страницы
 def get_page(url: str) -> None:
+    """Получить DOM дерево страницы"""
     global driver
     # Опции оптимизации загрузки
     options = webdriver.ChromeOptions()
@@ -40,45 +42,46 @@ def get_page(url: str) -> None:
         driver.execute_script("window.stop();")
     print('Страница получена')
 
-# Проячем окно уведомления и кукисов
 def close_dialogs() -> None:
+    """Прячем окно уведомления и кукисов"""
     # Кнопка куки
     try:
         cookie_buttons = driver.find_elements(By.CLASS_NAME, 'cookie-modal__button')
-        if len(cookie_buttons) > 0: cookie_buttons[0].click()
-    except (Exception,):
+        if len(cookie_buttons) > 0:
+            cookie_buttons[0].click()
+    except NoSuchElementException:
         print('Кнопка куки не найдена')
 
     # Кнопка уведомленния
     try:
         confirm_buttons = driver.find_elements(By.CLASS_NAME, 'push-confirm__button')
-        if len(confirm_buttons) > 0: confirm_buttons[0].click()
-    except (Exception,):
+        if len(confirm_buttons) > 0:
+            confirm_buttons[0].click()
+    except NoSuchElementException:
         print('Кнопка уведомленния не найдена')
 
     time.sleep(0.5)
-
     print('Диалоги закрыты')
 
-# Очистка текста
 def clean_text(value: str) -> str:
+    """Очистка текста"""
     return value.strip().replace('\n', ' ').replace('  ', ' ').replace('  ', ' ')
 
-# Имя сохраняемых файлов
 def get_filename() -> str:
+    """Имя сохраняемых файлов"""
     current_date_time = datetime.now()
     time_stamp = current_date_time.strftime('%m.%d.%y %H.%M.%S')
     return '_' + time_stamp
 
-# Парсинг строк таблицы блока
 def get_rows(element: WebElement, block_name: str, col_count: int, block_column: str = '') -> typing.List[str]:
+    """Парсинг строк таблицы блока"""
     rows = []
     print('  - ' + block_name)
 
     # Поиск заголовка
     try:
         header = element.find_element(By.XPATH, "//span[text()='" + block_name + "']")
-    except (Exception,):
+    except NoSuchElementException:
         print('Таблица "' + block_name + '" не найдена')
         return rows
 
@@ -87,10 +90,11 @@ def get_rows(element: WebElement, block_name: str, col_count: int, block_column:
     # Если строки объедены в блоки (напрмиер, Исходы по таймам)
     if block_column != '':
         try:
-            path = "//div[contains(@class, 'dops-item-row')]//div[contains(@class, 'dops-item-row__title')]//span[contains(text(),'" + block_column + "')]"
+            path_prefix = "//div[contains(@class, 'dops-item-row')]//div[contains(@class, 'dops-item-row__title')]"
+            path = path_prefix + "//span[contains(text(),'" + block_column + "')]"
             table_column = block.find_element(By.XPATH, path)
             block = table_column.find_element(By.XPATH, '..//..')
-        except (Exception,):
+        except NoSuchElementException:
             print('Блок "' + block_column + '" в таблице "' + block_name + '" не найден')
             return rows
 
@@ -156,19 +160,18 @@ def get_rows(element: WebElement, block_name: str, col_count: int, block_column:
 
     return rows
 
-# Значение в строке по названию
 def get_value(rows: typing.List[str], name: str) -> str:
+    """Значение в строке по названию"""
     if name in rows:
         cell_index = rows.index(name)
         return rows[cell_index + 1]
-    else:
-        return ''
+    return ''
 
-# Клик по элементу
 def click(element: WebElement) -> None:
+    """Клик по элементу"""
     driver.execute_script("arguments[0].click();", element)
 
-# Контейнер игр
 def get_container() -> None:
+    """Контейнер игр"""
     global container
     container = driver.find_element(By.CLASS_NAME, 'container')
