@@ -4,7 +4,6 @@ from datetime import datetime
 import sys
 import time
 import traceback
-from selenium.common.exceptions import WebDriverException, TimeoutException
 
 import utils as u
 import workflow as w
@@ -23,7 +22,7 @@ if not LOG_IN_CONSOLE:
 
 print('Старт')
 start_time = datetime.now()
-" BaseException"
+
 try:
     u.get_page(BASE_URL)  # Получение страницы
     loaded_time = datetime.now()
@@ -45,7 +44,7 @@ try:
     print(f'Время парсинга: {end_time - loaded_time}')
     print(f'Время работы всего: {end_time - start_time}')
     print('Финиш')
-except (Exception, WebDriverException, TimeoutException) as e:
+except BaseException as e:
     print("\nERROR")
 
     ex_type, ex_value, ex_traceback = sys.exc_info()

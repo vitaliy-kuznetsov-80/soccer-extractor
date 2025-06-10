@@ -85,7 +85,9 @@ def get_mb(rows: t.List[str], value: str):
     except ValueError:
         return { 'm': '', 'b': '' }
     m = rows[index + 1]
-    b = rows[index + 3]
+    b: str = ''
+    if index + 3 < len(rows):
+        b = rows[index + 3]
     return { 'm': m, 'b': b }
 
 def get_total(element: WebElement, header_line):
@@ -163,7 +165,8 @@ def save_to_excel(element: WebElement, header_line: t.List[str], sheet: xlwt.Wor
         # Если не вещественное число, то прочерк
         try:
             float(value)
-            sheet.write(row_index, col_index, float(value))
+            style = xlwt.easyxf('font: name Calibri')
+            sheet.write(row_index, col_index, float(value), style)
         except ValueError:
             style = xlwt.easyxf('pattern: pattern solid, fore_colour empty_color')
             sheet.write(row_index, col_index, '', style)

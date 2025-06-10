@@ -13,7 +13,7 @@ from selenium.webdriver.support import expected_conditions as ec
 
 from xlrd import open_workbook
 from xlutils.copy import copy
-from xlwt import Workbook, Worksheet, add_palette_colour
+from xlwt import Workbook, Worksheet, add_palette_colour, easyxf
 
 import utils as u
 import params as p
@@ -179,12 +179,13 @@ def write_left_header(excel_row_index: int, game_id: str, row: WebElement, sheet
           game + ': ' + team1 + ' / ' + team2 + ': ' + game_id)
 
     # Сохранение в Excel
-    sheet.write(excel_row_index, 0, date_game_report)
-    sheet.write(excel_row_index, 1, weekday)
-    sheet.write(excel_row_index, 2, time_game)
-    sheet.write(excel_row_index, 3, game)
-    sheet.write(excel_row_index, 4, team1)
-    sheet.write(excel_row_index, 5, team2)
+    style = easyxf('font: name Calibri')
+    sheet.write(excel_row_index, 0, date_game_report, style)
+    sheet.write(excel_row_index, 1, weekday, style)
+    sheet.write(excel_row_index, 2, time_game, style)
+    sheet.write(excel_row_index, 3, game, style)
+    sheet.write(excel_row_index, 4, team1, style)
+    sheet.write(excel_row_index, 5, team2, style)
 
 def set_msk() -> None:
     """Выбор часового пояса МСК"""
