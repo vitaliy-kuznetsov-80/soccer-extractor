@@ -31,7 +31,7 @@ def get_ignore_list():
         return ignore_list
 
 def mark_lines(limit_count):
-    """Пометка строк для получения игр"""
+    """Пометка строк для получения игр через checkbox"""
     # Таблица парсинга. Берём только левую (СОБЫТИЯ)
     tables = u.container.find_elements(By.CLASS_NAME, 'champs__sport')[0]
 
