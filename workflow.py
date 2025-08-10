@@ -102,6 +102,9 @@ def parce_games(filename: str, game_limit: int, only_id: str) -> None:
     row_count = len(all_games)
     print('\nИгр в обработке: ' + str(row_count))
 
+    # Запоминаем предыдущую кнопку для закрытия, перед открытием нового
+    button_prev_play = None
+
     # Группы по линиям
     lines = u.container.find_elements(By.CLASS_NAME, 'line__champ')
     for line in lines:
@@ -128,7 +131,6 @@ def parce_games(filename: str, game_limit: int, only_id: str) -> None:
 
         # Цикл по играм
         game_date = date1
-        button_prev_play = None  # Запоминаем предыдущую кнопку для закрытия, перед открытием нового
         count = 0
         for row in rows:
             # Ограничние игр
@@ -158,6 +160,7 @@ def parce_games(filename: str, game_limit: int, only_id: str) -> None:
             button_play = row.find_element(By.CLASS_NAME, 'line-event__dops-toggle')
             if button_play.tag_name != 'button':
                 continue  # Игнор не кнопок
+
             # Клик по раскрывашке (правая колонка)
             u.click(button_play)
             is_exist = True
