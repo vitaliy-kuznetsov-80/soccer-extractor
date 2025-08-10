@@ -12,7 +12,8 @@ import workflow as w
 LOG_IN_CONSOLE = False
 LINES_LIMIT = 0 # Лимит линий. 0 - безлимит
 GAMES_LIMIT = 0 # Лимит обработки игр. 0 - безлимит
-ONLY_ID = '' # Поиск конкретной игры по Id. Пустая строка - отключено
+ONLY_LINE_ID = '' # Поиск конкретной линии по Id. Пустая строка - отключено
+ONLY_GAME_ID = '' # Поиск конкретной игры по Id. Пустая строка - отключено
 
 BASE_URL = 'https://betcity.ru/ru/line/soccer?ts=24' # Url списка линий
 filename = u.get_filename() # Имя фалйла скрина и Excel
@@ -32,9 +33,9 @@ try:
 
     u.get_container()  # Получение контенера для игр
 
-    w.mark_lines(LINES_LIMIT)  # Пометка строк для получения игр
+    w.mark_lines(LINES_LIMIT, ONLY_LINE_ID)  # Пометка строк для получения игр
     w.load_games()  # Загрузка игр для выбранных линий
-    w.parce_games(filename, GAMES_LIMIT, ONLY_ID)  # Парсинг игр
+    w.parce_games(filename, GAMES_LIMIT, ONLY_GAME_ID)  # Парсинг игр
 
     time.sleep(1)
     u.driver.close()

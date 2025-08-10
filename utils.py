@@ -1,6 +1,7 @@
 """Утилитные функции"""
 
 import time
+import re
 from datetime import datetime
 from typing import Union
 import typing
@@ -175,3 +176,8 @@ def get_container() -> None:
     """Контейнер игр"""
     global container
     container = driver.find_element(By.CLASS_NAME, 'container')
+
+def get_id(tag: WebElement) -> str:
+    """Последний Id в тэге - a"""
+    a_tag = tag.get_attribute('href')
+    return re.search('/ru/line/soccer/(.*)ts=24', a_tag).group(1)[:-1].strip()
