@@ -1,4 +1,12 @@
 [FORMAT]
-
-# Maximum number of characters on a single line.
 max-line-length=120
+single-line-if-stmt=yes
+
+[LOGGING]
+logging-format-style=new
+
+[DESIGN]
+max-locals=20
+max-statements=50
+max-args=4
+too-few-public-methods=disable
