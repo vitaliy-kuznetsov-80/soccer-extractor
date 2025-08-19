@@ -2,13 +2,13 @@
 
 import typing as t
 from dataclasses import dataclass
-from src.utils.logger import Logger
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.common import NoSuchElementException
 
-from src.utils.excel_manager import ExcelManager
+from ..utils import Logger
+from ..utils import ExcelManager
 
 @dataclass
 class SaveResultDto:

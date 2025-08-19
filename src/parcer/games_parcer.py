@@ -3,17 +3,17 @@
 from datetime import date
 import time
 from dataclasses import dataclass
-from src.utils.logger import Logger
 
 from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.ie.webdriver import WebDriver
+from selenium.webdriver.chrome.webdriver import WebDriver
 
-from src.utils import utils as u
 from src.parcer.params_parcer import ParamsParcer, SaveResultDto
-from src.utils.excel_manager import ExcelManager
-from src.page import Page
+from ..utils import Logger
+from ..utils import Utils
+from ..utils import ExcelManager
+from ..page import Page
 
 @dataclass
 class _LeftHeaderDto:
@@ -67,7 +67,7 @@ class GamesParcer:
             game_date = date1
             for row in rows:
                 # Получение Id игры (для лога и отладки)
-                game_id = u.get_id(row.find_element(By.TAG_NAME, 'a'))
+                game_id = Utils.get_id(row.find_element(By.TAG_NAME, 'a'))
                 # Поиск конкртеной игры, если есть
                 if only_id and game_id != only_id: continue
 
@@ -105,7 +105,7 @@ class GamesParcer:
                 button_prev_play = button_play  # Запоминаем кнопку раскрытия
                 excel_row_index = excel_row_index + 1
 
-        filename = u.get_filename()  # Имя фалйла скрина и Excel
+        filename = Utils.get_filename()  # Имя фалйла скрина и Excel
         self.em.save(filename)
 
     # Private
@@ -130,7 +130,7 @@ class GamesParcer:
                                                         'following-sibling::*[1]')
             # Id игры после смены даты
             a_tag = first_row_date2.find_element(By.CLASS_NAME, 'line-event__name')
-            game_id_date2 = u.get_id(a_tag)
+            game_id_date2 = Utils.get_id(a_tag)
         return date1, date2, game_id_date2
 
     @staticmethod

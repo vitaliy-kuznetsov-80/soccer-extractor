@@ -1,13 +1,12 @@
 """Поментка линий чекбоксами для загрузки игр"""
 
-from src.utils.logger import Logger
-
 from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.ie.webdriver import WebDriver
+from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 
-from src.utils import utils as u
-from src.page import Page
+from ..utils import Utils
+from ..utils import Logger
+from ..page import Page
 
 class GamesLoader:
     """Загрузка игр линий"""
@@ -42,7 +41,7 @@ class GamesLoader:
 
             # Ссылка на линию с названием
             a_tag = row.find_element(By.CLASS_NAME, 'champs__champ-name')
-            line_id = u.get_id(a_tag)
+            line_id = Utils.get_id(a_tag)
             # Поиск конкртеной линии, если есть
             if only_id and line_id != only_id: continue
 

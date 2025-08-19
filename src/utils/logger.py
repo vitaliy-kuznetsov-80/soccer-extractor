@@ -2,7 +2,7 @@ import logging
 import os
 from logging import Logger as DefLogger
 
-import src.utils.utils as u
+from . import Utils
 
 class Logger:
     """Логер"""
@@ -11,7 +11,7 @@ class Logger:
 
     def __init__(self, in_console: bool):
         self.in_console = in_console
-        filename = u.get_filename() # Имя фалйла скрина и Excel
+        filename = Utils.get_filename() # Имя фалйла скрина и Excel
         log_filename = 'results/log' + filename + '.log'
 
         current_directory = os.getcwd()

@@ -4,12 +4,12 @@ from selenium import webdriver
 from selenium.common import TimeoutException, NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.ie.webdriver import WebDriver
+from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 
-from src.utils.logger import Logger
-from src.utils.config import Config
+from .utils import Logger
+from .utils import Config
 
 class Page:
     """Страница"""

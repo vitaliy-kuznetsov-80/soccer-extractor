@@ -1,1 +1,1 @@
-py scr/main.py
+py main.py

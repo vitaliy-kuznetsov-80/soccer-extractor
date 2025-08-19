@@ -5,11 +5,11 @@ import sys
 import time
 import traceback
 
-from page import Page
-from src.parcer.games_loader import GamesLoader
-from src.parcer.games_parcer import GamesParcer
-from src.utils.config import Config
-from src.utils.logger import Logger
+from src.page import Page
+from src.utils import Config
+from src.utils import Logger
+from src.parcer import GamesLoader
+from src.parcer import GamesParcer
 
 # Url списка линий
 BASE_URL: str = 'https://betcity.ru/ru/line/soccer?ts=24'
@@ -55,10 +55,9 @@ try:
 except Exception as e: # pylint: disable=broad-except
     log.print('\nERROR')
 
-    ex_type, ex_value, ex_traceback = sys.exc_info()
+    ex_value, ex_traceback = sys.exc_info()
     trace_back = traceback.extract_tb(ex_traceback)
 
-    log.print('Type: ' + str(ex_type.__name__))
     log.print('Message: ' + str(ex_value))
 
     for trace in trace_back:
