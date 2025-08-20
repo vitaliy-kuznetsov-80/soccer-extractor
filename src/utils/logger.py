@@ -1,8 +1,11 @@
 import logging
 import os
 from logging import Logger as DefLogger
+from pathlib import Path
 
 from . import Utils
+
+RESULS_FOLDER_NAME = 'results'
 
 class Logger:
     """Логер"""
@@ -11,20 +14,23 @@ class Logger:
 
     def __init__(self, in_console: bool):
         self.in_console = in_console
-        filename = Utils.get_filename() # Имя фалйла скрина и Excel
-        log_filename = 'results/log' + filename + '.log'
 
-        current_directory = os.getcwd()
-        print(current_directory)
+        # Создание папки results, если нет
+        Path(RESULS_FOLDER_NAME).mkdir(parents=True, exist_ok=True)
 
+        log_filename = self._get_log_filename()
+
+        # Удаляем файл лога, если с таким-же именем
         if os.path.exists(log_filename): os.remove(log_filename)
 
         if in_console:
+            # Логирование в консоль
             logging.basicConfig(
                 level=logging.INFO,
                 format='%(message)s',
             )
         else:
+            # Логирование в файл
             logging.basicConfig(
                 level=logging.INFO,
                 format='%(message)s',
@@ -33,6 +39,11 @@ class Logger:
             )
 
         self.log =logging.getLogger(__name__)
+
+    @staticmethod
+    def _get_log_filename():
+        filename = Utils.get_filename()
+        return RESULS_FOLDER_NAME + '/log' + filename + '.log'
 
     def print(self, value: str):
         self.log.info(value)

@@ -55,7 +55,7 @@ try:
 except Exception as e: # pylint: disable=broad-except
     log.print('\nERROR')
 
-    ex_value, ex_traceback = sys.exc_info()
+    _, ex_value, ex_traceback = sys.exc_info()
     trace_back = traceback.extract_tb(ex_traceback)
 
     log.print('Message: ' + str(ex_value))
