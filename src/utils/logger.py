@@ -5,7 +5,7 @@ from pathlib import Path
 
 from . import Utils
 
-RESULS_FOLDER_NAME = 'results'
+LOGS_FOLDER_NAME = 'logs'
 
 class Logger:
     """Логер"""
@@ -15,8 +15,8 @@ class Logger:
     def __init__(self, in_console: bool):
         self.in_console = in_console
 
-        # Создание папки results, если нет
-        Path(RESULS_FOLDER_NAME).mkdir(parents=True, exist_ok=True)
+        # Создание папки логов, если нет
+        Path(LOGS_FOLDER_NAME).mkdir(parents=True, exist_ok=True)
 
         log_filename = self._get_log_filename()
 
@@ -43,7 +43,7 @@ class Logger:
     @staticmethod
     def _get_log_filename():
         filename = Utils.get_filename()
-        return RESULS_FOLDER_NAME + '/log' + filename + '.log'
+        return  os.path.join(LOGS_FOLDER_NAME, filename + '.log')
 
     def print(self, value: str):
         self.log.info(value)

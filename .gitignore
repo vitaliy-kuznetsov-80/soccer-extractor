@@ -3,3 +3,4 @@
 /config/appsettings.local.json
 /__pycache__
 *.pyc
+/logs

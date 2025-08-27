@@ -105,8 +105,7 @@ class GamesParcer:
                 button_prev_play = button_play  # Запоминаем кнопку раскрытия
                 excel_row_index = excel_row_index + 1
 
-        filename = Utils.get_filename()  # Имя фалйла скрина и Excel
-        self.em.save(filename)
+        self.em.save()
 
     # Private
 
