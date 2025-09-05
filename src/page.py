@@ -24,47 +24,22 @@ class Page:
         self.log = log
         self.conf = conf
 
-    def init(self) -> None:
-        """Получить DOM дерево страницы"""
-        # Опции оптимизации загрузки
-        options = webdriver.ChromeOptions()
-        options.add_argument('-no-sandbox')
-        options.add_argument('--disable-gpu')
-        options.add_argument("disable-infobars")
-        options.add_argument('-disable-dev-shm-usage')
-        options.add_argument("--disable-extensions")
-        options.add_argument("--blink-settings=imagesEnabled=false")
-        options.add_experimental_option('excludeSwitches', ['disable-popup-blocking'])
-        options.add_experimental_option("prefs", {
-            "profile.managed_default_content_settings.images": 2,
-            'media_stream': 2,
-        })
-        self.drv = webdriver.Chrome(options)
-        self.drv.maximize_window() # Полноэкранный режим
-
-        self.drv.set_page_load_timeout(self.conf.page_load_timeout) # Тамаут принудительной оставновки загрузки
-        try:
-            self.drv.get(self.url) # Запрос получения страниц
-            self.log.print('Страница получена')
-            # Ждем загрузку игр
-            time.sleep(1)
-            self.wait(By.CLASS_NAME, 'champs__sport')
-            self.log.print('Линии игр загружены')
-        except TimeoutException:
-            self.log.print('Принудительная остановка')
-            self.drv.execute_script("window.stop();")
+        self._init() # Получить DOM дерево
+        self._close_dialogs()  # Закрытие диалогов
+        self._set_msk()  # Выбор часового пояса МСК
+        self._get_container()  # Получение контенера для игр
 
     def close(self):
         """Закрытие страницы"""
         self.drv.close()
 
-    def get_container(self) -> None:
+    def _get_container(self) -> None:
         """Контенер, где находятся все игры (div class="container") (для сокращения времени поиска)"""
         conteiner = self.drv.find_element(By.CLASS_NAME, 'container')
         self.conteiner = conteiner
         self.log.print('Контейнер получен')
 
-    def close_dialogs(self) -> None:
+    def _close_dialogs(self) -> None:
         """Прячем окно уведомления и кукисов"""
         # Кнопка куки
         try:
@@ -85,7 +60,7 @@ class Page:
         time.sleep(0.5)
         self.log.print('Диалоги закрыты')
 
-    def set_msk(self) -> None:
+    def _set_msk(self) -> None:
         """Выбор часового пояса МСК"""
         # Кнопка настроек
         button_settings = self.drv.find_element(By.CLASS_NAME, 'sub-header__icon-settings')
@@ -121,3 +96,33 @@ class Page:
         """Поиск элемента"""
         located = ec.presence_of_element_located((find_by, find_element))
         WebDriverWait(self.drv, timeout).until(located)
+
+    def _init(self) -> None:
+        """Получить DOM дерево страницы"""
+        # Опции оптимизации загрузки
+        options = webdriver.ChromeOptions()
+        options.add_argument('-no-sandbox')
+        options.add_argument('--disable-gpu')
+        options.add_argument("disable-infobars")
+        options.add_argument('-disable-dev-shm-usage')
+        options.add_argument("--disable-extensions")
+        options.add_argument("--blink-settings=imagesEnabled=false")
+        options.add_experimental_option('excludeSwitches', ['disable-popup-blocking'])
+        options.add_experimental_option("prefs", {
+            "profile.managed_default_content_settings.images": 2,
+            'media_stream': 2,
+        })
+        self.drv = webdriver.Chrome(options)
+        self.drv.maximize_window() # Полноэкранный режим
+
+        self.drv.set_page_load_timeout(self.conf.page_load_timeout) # Тамаут принудительной оставновки загрузки
+        try:
+            self.drv.get(self.url) # Запрос получения страниц
+            self.log.print('Страница получена')
+            # Ждем загрузку игр
+            time.sleep(1)
+            self.wait(By.CLASS_NAME, 'champs__sport')
+            self.log.print('Линии игр загружены')
+        except TimeoutException:
+            self.log.print('Принудительная остановка')
+            self.drv.execute_script("window.stop();")

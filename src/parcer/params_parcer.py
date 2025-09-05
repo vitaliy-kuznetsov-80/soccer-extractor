@@ -64,7 +64,7 @@ class ParamsParcer:
         will_score_1_time = self.get_will_score_1_time(dto.element)
         total_1time = self.get_total_1time(dto.element)
 
-        col_index = 6
+        col_index = 7
 
         def write(value):
             nonlocal col_index
@@ -233,7 +233,7 @@ class ParamsParcer:
 
     def _get_rows(self, dto: GameRowsDto) -> t.List[str]:
         """Парсинг строк таблицы блока"""
-        rows = []
+        rows: list[str] = []
         self.log.print('  - ' + dto.block_name)
 
         # Поиск заголовка

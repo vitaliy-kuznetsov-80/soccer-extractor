@@ -1,5 +1,4 @@
 """Основная программа"""
-
 from datetime import datetime
 import sys
 import time
@@ -12,7 +11,7 @@ from src.parcer import GamesLoader
 from src.parcer import GamesParcer
 
 # Url списка линий
-BASE_URL: str = 'https://betcity.ru/ru/line/soccer?ts=24'
+URL: str = 'https://betcity.ru/ru/line/soccer?ts=24'
 
 # Конфиг
 conf = Config()
@@ -25,14 +24,7 @@ start_time = datetime.now()
 
 try:
     # Получение страницы
-    page = Page(BASE_URL, conf, log)
-    page.init()
-
-    loaded_time = datetime.now()
-
-    page.close_dialogs()  # Закрытие диалогов
-    page.set_msk()  # Выбор часового пояса МСК
-    page.get_container()  # Получение контенера для игр
+    page = Page(URL, conf, log)
 
     game_loader = GamesLoader(page, log)
     # Пометка строк для получения игр
@@ -48,9 +40,7 @@ try:
     page.close()
 
     end_time = datetime.now()
-    log.print("Время получения страницы: " + str(loaded_time - start_time))
-    log.print('Время парсинга: ' + str(end_time - loaded_time))
-    log.print('Время работы всего: ' + str(end_time - start_time))
+    log.print('Время работы: ' + str(end_time - start_time))
     log.print('Финиш')
 except Exception as e: # pylint: disable=broad-except
     log.print('\nERROR')

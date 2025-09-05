@@ -41,7 +41,7 @@ class GamesLoader:
 
             # Ссылка на линию с названием
             a_tag = row.find_element(By.CLASS_NAME, 'champs__champ-name')
-            line_id = Utils.get_id(a_tag)
+            line_id = Utils.get_id(a_tag, 'ts=24')
             # Поиск конкртеной линии, если есть
             if only_id and line_id != only_id: continue
 

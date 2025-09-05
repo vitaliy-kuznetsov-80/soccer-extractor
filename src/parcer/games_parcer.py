@@ -18,6 +18,7 @@ from ..page import Page
 @dataclass
 class _LeftHeaderDto:
     """Dto левого заголовка"""
+    id: str
     line:  WebElement
     date_parce: str
     excel_row_index: int
@@ -47,7 +48,7 @@ class GamesParcer:
     def parce(self,  only_id: str) -> None:
         """Парсинг игр"""
 
-        self.em.init_excel()
+        self.em.init_excel('template.xls')
         self._get_all_games()
 
         excel_row_index = 2  # Первый индекс строки в Excel
@@ -67,7 +68,7 @@ class GamesParcer:
             game_date = date1
             for row in rows:
                 # Получение Id игры (для лога и отладки)
-                game_id = Utils.get_id(row.find_element(By.TAG_NAME, 'a'))
+                game_id = Utils.get_id(row.find_element(By.TAG_NAME, 'a'), 'ts=24')
                 # Поиск конкртеной игры, если есть
                 if only_id and game_id != only_id: continue
 
@@ -80,7 +81,7 @@ class GamesParcer:
                 if game_id_date2 == game_id: game_date = date2
 
                 # Парсим и записываем левый заголвоок
-                self._write_left_header(_LeftHeaderDto(line, game_date, excel_row_index, game_id, row))
+                self._write_left_header(_LeftHeaderDto(game_id, line, game_date, excel_row_index, game_id, row))
 
                 # Кнопка раскрытия игры
                 button_play = row.find_element(By.CLASS_NAME, 'line-event__dops-toggle')
@@ -129,7 +130,7 @@ class GamesParcer:
                                                         'following-sibling::*[1]')
             # Id игры после смены даты
             a_tag = first_row_date2.find_element(By.CLASS_NAME, 'line-event__name')
-            game_id_date2 = Utils.get_id(a_tag)
+            game_id_date2 = Utils.get_id(a_tag, 'ts=24')
         return date1, date2, game_id_date2
 
     @staticmethod
@@ -170,9 +171,10 @@ class GamesParcer:
               game_name + ': ' + team1 + ' / ' + team2 + ': ' + dto.game_id)
 
         # Сохранение в Excel
-        self.em.write(dto.excel_row_index, 0, date_game_report)
-        self.em.write(dto.excel_row_index, 1, weekday)
-        self.em.write(dto.excel_row_index, 2, time_game)
-        self.em.write(dto.excel_row_index, 3, game_name)
-        self.em.write(dto.excel_row_index, 4, team1)
-        self.em.write(dto.excel_row_index, 5, team2)
+        self.em.write(dto.excel_row_index, 0, dto.id)
+        self.em.write(dto.excel_row_index, 1, date_game_report)
+        self.em.write(dto.excel_row_index, 2, weekday)
+        self.em.write(dto.excel_row_index, 3, time_game)
+        self.em.write(dto.excel_row_index, 4, game_name)
+        self.em.write(dto.excel_row_index, 5, team1)
+        self.em.write(dto.excel_row_index, 6, team2)
