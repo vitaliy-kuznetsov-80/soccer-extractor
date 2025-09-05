@@ -1,7 +1,7 @@
 """Утилитные функции"""
 
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from selenium.webdriver.remote.webelement import WebElement
 
@@ -30,3 +30,12 @@ class Utils:
         if a_tag:
             return re.search('/soccer/(.*)' + end_str, a_tag).group(1)[:-1].strip()
         return ''
+
+    @staticmethod
+    def get_yesterday() -> datetime:
+        """"Вчерашняя дата без времени"""
+        return datetime.today() - timedelta(days=1)
+
+    @staticmethod
+    def get_url_date(date: datetime) -> str:
+        return str(date.year) + '-' + str(date.month).zfill(2) + '-' + str(date.day).zfill(2)

@@ -11,6 +11,8 @@ from selenium.webdriver.support import expected_conditions as ec
 from .utils import Logger
 from .utils import Config
 
+BASE_URL = 'https://betcity.ru/ru/'
+
 class Page:
     """Страница"""
     url: str
@@ -19,19 +21,39 @@ class Page:
     conteiner: WebElement
     conf: Config
 
-    def __init__(self, url: str, conf: Config, log: Logger):
-        self.url = url
+    def __init__(self, url: str, conf: Config, log: Logger, redy_content_class: str):
+        self.url = BASE_URL + url
         self.log = log
         self.conf = conf
+
+        self.log.print('Парсинг: ' + url)
 
         self._init() # Получить DOM дерево
         self._close_dialogs()  # Закрытие диалогов
         self._set_msk()  # Выбор часового пояса МСК
         self._get_container()  # Получение контенера для игр
 
+        # Ожидание прогрузки контента
+        time.sleep(1)
+        self.wait(By.CLASS_NAME, redy_content_class)
+        self.log.print('Контент загружен')
+
+    def click(self, element: WebElement) -> None:
+        """Клик по элементу"""
+        self.drv.execute_script("arguments[0].click();", element)
+
+    def wait(self, find_by: str, find_element: str, timeout:  int | None = None) -> None:
+        if timeout is None: timeout = self.conf.element_load_timeout
+
+        """Поиск элемента"""
+        located = ec.presence_of_element_located((find_by, find_element))
+        WebDriverWait(self.drv, timeout).until(located)
+
     def close(self):
         """Закрытие страницы"""
         self.drv.close()
+
+    # --- Private
 
     def _get_container(self) -> None:
         """Контенер, где находятся все игры (div class="container") (для сокращения времени поиска)"""
@@ -80,22 +102,14 @@ class Page:
         button_save = self.drv.find_element(By.CLASS_NAME, 'settings-footer-button_save')
         self.click(button_save)
 
-        # Ждём загрузки контейнера
-        time.sleep(1)
-        self.wait(By.CLASS_NAME, 'container')
+        self.wait_base_content()
 
         self.log.print('Выбран часовой пояс МСК')
 
-    def click(self, element: WebElement) -> None:
-        """Клик по элементу"""
-        self.drv.execute_script("arguments[0].click();", element)
-
-    def wait(self, find_by: str, find_element: str, timeout:  int | None = None) -> None:
-        if timeout is None: timeout = self.conf.element_load_timeout
-
-        """Поиск элемента"""
-        located = ec.presence_of_element_located((find_by, find_element))
-        WebDriverWait(self.drv, timeout).until(located)
+    def wait_base_content(self) -> None:
+        """Загрузка основного контента"""
+        time.sleep(1)
+        self.wait(By.CLASS_NAME, 'container')
 
     def _init(self) -> None:
         """Получить DOM дерево страницы"""
@@ -119,10 +133,11 @@ class Page:
         try:
             self.drv.get(self.url) # Запрос получения страниц
             self.log.print('Страница получена')
-            # Ждем загрузку игр
-            time.sleep(1)
-            self.wait(By.CLASS_NAME, 'champs__sport')
-            self.log.print('Линии игр загружены')
+            self.wait_base_content()
+            self.log.print('Cтраница загружена')
         except TimeoutException:
-            self.log.print('Принудительная остановка')
+            self.log.print('Не удалось загрузить. Принудительная остановка')
             self.drv.execute_script("window.stop();")
+            self.drv.quit()
+            raise
+

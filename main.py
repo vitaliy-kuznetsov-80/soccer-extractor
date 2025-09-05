@@ -11,7 +11,7 @@ from src.parcer import GamesLoader
 from src.parcer import GamesParcer
 
 # Url списка линий
-URL: str = 'https://betcity.ru/ru/line/soccer?ts=24'
+URL: str = 'line/soccer?ts=24'
 
 # Конфиг
 conf = Config()
@@ -24,7 +24,7 @@ start_time = datetime.now()
 
 try:
     # Получение страницы
-    page = Page(URL, conf, log)
+    page = Page(URL, conf, log, 'champs__sport')
 
     game_loader = GamesLoader(page, log)
     # Пометка строк для получения игр

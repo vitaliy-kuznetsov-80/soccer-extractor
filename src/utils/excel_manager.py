@@ -44,13 +44,16 @@ class ExcelManager:
         self.wb = copy(self.rb)
         self.sheet = self.wb.get_sheet(0)  # Первая книга
 
-    def get_ids(self) -> list[str]:
-        all_data: list[str] = []
+    def get_rows(self) -> list[tuple[int, str]]:
+        rows: list[tuple[int, str]] = []
         for row_index in range(len(self.sheet.rows)):
             if row_index < 2: continue
-            row_values = self.wb_sheet.cell_value(row_index, 0)
-            all_data.append(row_values)
-        return all_data
+            game_id = str(self.wb_sheet.cell_value(row_index, 0))
+            result_1 = str(self.wb_sheet.cell_value(row_index, 37))
+            result_2 = str(self.wb_sheet.cell_value(row_index, 38))
+            # Добавляем, если нет результатов
+            if game_id and (not result_1 or not result_2): rows.append((row_index, game_id))
+        return rows
 
     def save(self):
         self.wb.save(self.filename)
