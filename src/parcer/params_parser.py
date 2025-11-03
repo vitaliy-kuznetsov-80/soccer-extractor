@@ -25,10 +25,11 @@ class GameRowsDto:
     col_count: int
     block_column: str = ''
 
-class ParamsParcer:
+class ParamsParser:
+    __log: Logger
 
     def __init__(self, log: Logger):
-        self.log = log
+        self.__log = log
 
     def get_header_params(self, row: WebElement):
         """Параметры заголовка игры"""
@@ -114,7 +115,7 @@ class ParamsParcer:
         write(will_score_1_time['1'])
         write(will_score_1_time['2'])
 
-    # Методы парсинга конретных таблиц
+    # Методы парсинга конкретных таблиц
 
     @staticmethod
     def get_outcome(header_line):
@@ -188,7 +189,7 @@ class ParamsParcer:
         total_header_m = header_line['total_m_value']
         total_header_b = header_line['total_b_value']
         result[total_header] = { 'm': total_header_m, 'b': total_header_b }
-        self.log.print('     ' + total_header + 'Мен: ' + total_header_m + ' | Бол: ' + total_header_b + ' [Заг]')
+        self.__log.print('     ' + total_header + 'Мен: ' + total_header_m + ' | Бол: ' + total_header_b + ' [Заг]')
 
         return result
 
@@ -234,18 +235,18 @@ class ParamsParcer:
     def _get_rows(self, dto: GameRowsDto) -> t.List[str]:
         """Парсинг строк таблицы блока"""
         rows: list[str] = []
-        self.log.print('  - ' + dto.block_name)
+        self.__log.print('  - ' + dto.block_name)
 
         # Поиск заголовка
         try:
             header = dto.element.find_element(By.XPATH, "//span[text()='" + dto.block_name + "']")
         except NoSuchElementException:
-            self.log.print('Таблица "' + dto.block_name + '" не найдена')
+            self.__log.print('Таблица "' + dto.block_name + '" не найдена')
             return rows
 
         block: WebElement = header.find_element(By.XPATH, '..//..')
 
-        # Если строки объедены в блоки (напрмиер, Исходы по таймам)
+        # Если строки объедены в блоки (например, Исходы по таймам)
         column = dto.block_column
         if column != '':
             try:
@@ -254,7 +255,7 @@ class ParamsParcer:
                 table_column = block.find_element(By.XPATH, path)
                 block = table_column.find_element(By.XPATH, '..//..')
             except NoSuchElementException:
-                self.log.print('Блок "' + column + '" в таблице "' + dto.block_name + '" не найден')
+                self.__log.print('Блок "' + column + '" в таблице "' + dto.block_name + '" не найден')
                 return rows
 
         # Поиск списка строк
@@ -298,7 +299,7 @@ class ParamsParcer:
                 rows.append(value3)
                 print_value = print_value + ' | ' + header3 + ': ' + value3
 
-            self.log.print('     ' + print_value)
+            self.__log.print('     ' + print_value)
 
         return rows
 

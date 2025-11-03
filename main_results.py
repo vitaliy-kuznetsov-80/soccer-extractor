@@ -4,7 +4,7 @@ import sys
 import traceback
 
 from src.page import Page
-from src.parcer.results_parcer import ResultParcer
+from src.parcer.results_parser import ResultParser
 from src.utils import Config, Utils
 from src.utils import Logger
 
@@ -23,14 +23,14 @@ start_time = datetime.now()
 def parce_results(url: str) -> None:
     page = Page(url, conf, log, 'results-champ')
 
-    rp = ResultParcer(log)
-    rp.parce_resuls(page)
+    rp = ResultParser(log)
+    rp.parce_results(page)
     rp.save()
 
     page.close()
 
 try:
-    url_yesterday = URL + '?date=' + Utils.get_url_date(Utils.get_yesterday())  # Url вчерашнего дня
+    url_yesterday = URL + '?date=' + Utils.get_url_date(Utils.get_yesterday()) # Url вчерашнего дня
     url_today = URL + '?date=' + Utils.get_url_date(datetime.now()) # Url сегодняшнего дня
 
     parce_results(url_yesterday) # Парсинг вчера

@@ -14,6 +14,15 @@ from ..utils.excel_manager import RESULTS_FOLDER_NAME
 
 @dataclass
 class _ResultDto:
+    """Объект передачи данных для хранения информации о результатах матча
+    Атрибуты:
+        id (str): Уникальный идентификатор матча
+        time (str): Время матча
+        team_1 (str): Название первой команды
+        team_2 (str): Название второй команды
+        first_time (str): Счёт первого тайма
+        total (str): Итоговый счёт матча
+    """
     id:  str
     time: str
     team_1: str
@@ -29,28 +38,28 @@ class _ResultDto:
         self.first_time = ''
         self.total = ''
 
-class ResultParcer:
+class ResultParser:
     """Парсинг игр"""
-    log: Logger
-    em: ExcelManager
-    rows: list[tuple[int, str]]
+    __log: Logger
+    __em: ExcelManager
+    __rows: list[tuple[int, str]]
 
     def __init__(self, log: Logger) -> None:
-        self.log = log
-        self.em = ExcelManager()
+        self.__log = log
+        self.__em = ExcelManager()
         self.set_exist_data()
 
-    def parce_resuls(self, page: Page):
-        for row in self.rows:
+    def parce_results(self, page: Page):
+        for row in self.__rows:
             row_index, row_id = row
             target_a: WebElement  # type: ignore
             try:
-                target_a = page.conteiner.find_element(By.XPATH, "//a[contains(@href, '" + row_id + "')]")
+                target_a = page.container.find_element(By.XPATH, "//a[contains(@href, '" + row_id + "')]")
             except NoSuchElementException:
-                self.em.write_empty_cell(row_index, 37)
-                self.em.write_empty_cell(row_index, 38)
-                self.em.write(row_index, 39, 'Не найден')
-                self.log.print(row_id + ' - не найден: ')
+                self.__em.write_empty_cell(row_index, 37)
+                self.__em.write_empty_cell(row_index, 38)
+                self.__em.write(row_index, 39, 'Не найден')
+                self.__log.print(row_id + ' - не найден: ')
                 continue
 
             row_container = target_a.find_element(By.XPATH, '..//..') # Контейнер строки (назад на 2 родителя)
@@ -75,18 +84,18 @@ class ResultParcer:
 
             # если нет результата, то отмена
             if not result.total and not result.first_time:
-                self.em.write(row_index, 39, 'Отмена')
+                self.__em.write(row_index, 39, 'Отмена')
 
-            self.em.write(row_index, 37, result.first_time)
-            self.em.write(row_index, 38, result.total)
-            self.em.write(row_index, 39, '-')
+            self.__em.write(row_index, 37, result.first_time)
+            self.__em.write(row_index, 38, result.total)
+            self.__em.write(row_index, 39, '-')
 
-            self.log.print(row_id + ' | ' + result.time + ' | ' +
-                      result.team_1 + ' | ' + result.team_2 + ' | ' +
-                      result.first_time + ' | ' + result.total)
+            self.__log.print(row_id + ' | ' + result.time + ' | ' +
+                             result.team_1 + ' | ' + result.team_2 + ' | ' +
+                             result.first_time + ' | ' + result.total)
 
     def save(self) -> None:
-        self.em.save()
+        self.__em.save()
 
     # --- Private
 
@@ -102,16 +111,16 @@ class ResultParcer:
             if file.startswith(date_stamp): filename = file
 
         if not filename:
-            self.log.print('Вчерашний файл матчей не найден')
+            self.__log.print('Вчерашний файл матчей не найден')
             raise SystemExit
 
-        self.log.print('Файл матчей найден: ' + filename)
+        self.__log.print('Файл матчей найден: ' + filename)
         return filename
 
     def set_exist_data(self) -> None:
         """ Список Id на проверку"""
         # Чтение Excel
         excel_filename = self._get_yesterday_filename()
-        self.em.load_excel(excel_filename)
+        self.__em.load_excel(excel_filename)
 
-        self.rows = self.em.get_rows()
+        self.__rows = self.__em.get_rows()

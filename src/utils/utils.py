@@ -2,8 +2,12 @@
 
 import re
 from datetime import datetime, timedelta
+import time
 
 from selenium.webdriver.remote.webelement import WebElement
+
+BASE_URL = 'https://betcity.ru/ru/'
+BASE_API_URL = 'https://ad.betcity.ru/d/off/'
 
 class Utils:
 
@@ -39,3 +43,19 @@ class Utils:
     @staticmethod
     def get_url_date(date: datetime) -> str:
         return str(date.year) + '-' + str(date.month).zfill(2) + '-' + str(date.day).zfill(2)
+
+    @staticmethod
+    def get_text_list(filename: str) -> list[str]:
+        """Список фраз - исключений"""
+        with open('assets/' + filename, encoding='utf-8') as file:
+            result = file.read().splitlines()
+            file.close()
+            return result
+
+    @staticmethod
+    def get_local_timezone_offset() -> float:
+        # time.timezone is the offset in seconds west of UTC. For a positive offset (east of UTC), negate the value
+        offset_seconds = -time.timezone
+        # Convert to hours
+        offset_hours = offset_seconds / 3600
+        return offset_hours

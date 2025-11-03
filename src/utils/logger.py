@@ -9,12 +9,9 @@ LOGS_FOLDER_NAME = 'logs'
 
 class Logger:
     """Логер"""
-    in_console: bool
-    log: DefLogger
+    __log: DefLogger
 
     def __init__(self, in_console: bool, postfix: str = '') -> None:
-        self.in_console = in_console
-
         # Создание папки логов, если нет
         Path(LOGS_FOLDER_NAME).mkdir(parents=True, exist_ok=True)
 
@@ -38,7 +35,7 @@ class Logger:
                 filename=log_filename
             )
 
-        self.log =logging.getLogger(__name__)
+        self.__log =logging.getLogger(__name__)
 
     @staticmethod
     def _get_log_filename(postfix: str = '') -> str:
@@ -46,4 +43,4 @@ class Logger:
         return  os.path.join(LOGS_FOLDER_NAME, filename + postfix + '.log')
 
     def print(self, value: str):
-        self.log.info(value)
+        self.__log.info(value)

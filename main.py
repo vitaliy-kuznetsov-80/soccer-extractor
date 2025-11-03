@@ -7,8 +7,8 @@ import traceback
 from src.page import Page
 from src.utils import Config
 from src.utils import Logger
-from src.parcer import GamesLoader
-from src.parcer import GamesParcer
+from src.parcer import LinesParser
+from src.parcer import GamesParser
 
 # Url списка линий
 URL: str = 'line/soccer?ts=24'
@@ -26,14 +26,14 @@ try:
     # Получение страницы
     page = Page(URL, conf, log, 'champs__sport')
 
-    game_loader = GamesLoader(page, log)
+    game_loader = LinesParser(page, log)
     # Пометка строк для получения игр
     game_loader.mark_lines(conf.lines_limit, conf.only_line_id)
     # Загрузка игр для выбранных линий
     game_loader.load_games()
 
     # Парсинг игр
-    parceGames = GamesParcer(page, log)
+    parceGames = GamesParser(page, log)
     parceGames.parce(conf.only_game_id)
 
     time.sleep(1)

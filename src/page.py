@@ -10,15 +10,14 @@ from selenium.webdriver.support import expected_conditions as ec
 
 from .utils import Logger
 from .utils import Config
-
-BASE_URL = 'https://betcity.ru/ru/'
+from .utils.utils import BASE_URL
 
 class Page:
     """Страница"""
     url: str
     log: Logger
     drv: WebDriver
-    conteiner: WebElement
+    container: WebElement
     conf: Config
 
     def __init__(self, url: str, conf: Config, log: Logger, redy_content_class: str):
@@ -58,7 +57,7 @@ class Page:
     def _get_container(self) -> None:
         """Контенер, где находятся все игры (div class="container") (для сокращения времени поиска)"""
         conteiner = self.drv.find_element(By.CLASS_NAME, 'container')
-        self.conteiner = conteiner
+        self.container = conteiner
         self.log.print('Контейнер получен')
 
     def _close_dialogs(self) -> None:
@@ -134,7 +133,7 @@ class Page:
             self.drv.get(self.url) # Запрос получения страниц
             self.log.print('Страница получена')
             self.wait_base_content()
-            self.log.print('Cтраница загружена')
+            self.log.print('Страница загружена')
         except TimeoutException:
             self.log.print('Не удалось загрузить. Принудительная остановка')
             self.drv.execute_script("window.stop();")

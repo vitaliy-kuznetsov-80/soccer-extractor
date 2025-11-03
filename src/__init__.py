@@ -5,6 +5,6 @@ from .utils import Config
 from .utils import Logger
 from .utils import ExcelManager
 
-from .parcer import GamesParcer
-from .parcer import GamesLoader
-from .parcer import ParamsParcer, SaveResultDto
+from .parcer import GamesParser
+from .parcer import LinesParser
+from .parcer import ParamsParser, SaveResultDto
