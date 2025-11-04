@@ -1,4 +1,5 @@
 .idea
+/dist
 /results
 /config/appsettings.local.json
 /__pycache__
