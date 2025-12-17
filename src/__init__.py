@@ -1,6 +1,7 @@
 from . import page
 
 from .utils import Utils
+from .utils import Region
 from .utils import Config
 from .utils import Logger
 from .utils import ExcelManager

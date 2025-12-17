@@ -65,7 +65,8 @@ class ParamsParser:
         will_score_1_time = self.get_will_score_1_time(dto.element)
         total_1time = self.get_total_1time(dto.element)
 
-        col_index = 7
+        # Индекс колонки, начиная с котрой заполняются коэффициенты
+        col_index = 8
 
         def write(value):
             nonlocal col_index

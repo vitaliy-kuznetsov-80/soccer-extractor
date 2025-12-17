@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+from datetime import datetime
 
 from xlrd import open_workbook, Book
 from xlrd.sheet import Sheet
@@ -45,10 +46,12 @@ class ExcelManager:
         self.__wb = copy(self.__rb)
         self.__sheet = self.__wb.get_sheet(0)  # Первая книга
 
+    def get_row_count(self) -> int:
+        return len(self.__sheet.get_rows())
+
     def get_rows(self) -> list[tuple[int, str]]:
         rows: list[tuple[int, str]] = []
-        excel_rows: list[Row] = self.__sheet.get_rows()
-        for row_index in range(len(excel_rows)):
+        for row_index in range(self.get_row_count()):
             if row_index < 2: continue
             game_id = str(self.__wb_sheet.cell_value(row_index, 0))
             result_1 = str(self.__wb_sheet.cell_value(row_index, 37))
@@ -74,6 +77,32 @@ class ExcelManager:
             self.__sheet.write(row, col, float(value), style_def)
         else:
             self.write_empty_cell(row, col)
+
+    @staticmethod
+    def get_filename_by_date(date: datetime) -> str:
+        """Получает имя файла с результатами вчерашнего дня
+        Returns:
+            Имя файла с результатами
+        """
+        files = os.listdir(RESULTS_FOLDER_NAME)
+
+        # Файл коэффициентов прошлого дня (берем первый со вчерашней датой)
+        date_stamp = Utils.get_date_stamp_by_date(date)
+
+        # Поиск файла вчерашнего
+        filename = ''
+        for file in files:
+            if file.startswith(date_stamp): filename = file
+
+        return filename
+
+    @staticmethod
+    def get_yesterday_filename() -> str:
+        return ExcelManager.get_filename_by_date(Utils.get_yesterday())
+
+    @staticmethod
+    def get_today_filename() -> str:
+        return ExcelManager.get_filename_by_date(datetime.today())
 
     @staticmethod
     def _get_result_filename():

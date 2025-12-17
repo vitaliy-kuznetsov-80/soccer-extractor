@@ -2,6 +2,7 @@ import time
 
 from selenium import webdriver
 from selenium.common import TimeoutException, NoSuchElementException
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -27,7 +28,9 @@ class Page:
 
         self.log.print('Парсинг: ' + url)
 
-        self._init() # Получить DOM дерево
+        result: bool = self._get_page() # Получить DOM дерево
+        if not result: raise TimeoutException('Не удалось получить страницу')
+
         self._close_dialogs()  # Закрытие диалогов
         self._set_msk()  # Выбор часового пояса МСК
         self._get_container()  # Получение контенера для игр
@@ -110,10 +113,37 @@ class Page:
         time.sleep(1)
         self.wait(By.CLASS_NAME, 'container')
 
-    def _init(self) -> None:
+    def _get_page(self) -> bool:
         """Получить DOM дерево страницы"""
-        # Опции оптимизации загрузки
+        options = self.__config_browser()
+        self.drv = webdriver.Chrome(options)
+        self.drv.maximize_window() # Полноэкранный режим
+
+        self.drv.set_page_load_timeout(self.conf.page_load_timeout) # Тамаут принудительной оставновки загрузки
+
+        for attempt in range(self.conf.retry_count):
+            try:
+                self.log.print('Попытка получения страницы: ' + str(attempt + 1))
+                self.drv.get(self.url) # Запрос получения страниц
+                self.log.print('Страница получена')
+                self.wait_base_content()
+                self.log.print('Страница загружена')
+                return True
+            except TimeoutException:
+                self.log.print('Таймаут')
+                if attempt < self.conf.retry_count - 1:
+                    time.sleep(self.conf.retry_count * 1)
+                else:
+                    print("Принудительная остановка")
+                    self.drv.execute_script("window.stop();")
+                    self.drv.quit()
+                    return False
+        return False
+
+    @staticmethod
+    def __config_browser() -> Options:
         options = webdriver.ChromeOptions()
+        # Опции оптимизации загрузки
         options.add_argument('-no-sandbox')
         options.add_argument('--disable-gpu')
         options.add_argument("disable-infobars")
@@ -125,18 +155,4 @@ class Page:
             "profile.managed_default_content_settings.images": 2,
             'media_stream': 2,
         })
-        self.drv = webdriver.Chrome(options)
-        self.drv.maximize_window() # Полноэкранный режим
-
-        self.drv.set_page_load_timeout(self.conf.page_load_timeout) # Тамаут принудительной оставновки загрузки
-        try:
-            self.drv.get(self.url) # Запрос получения страниц
-            self.log.print('Страница получена')
-            self.wait_base_content()
-            self.log.print('Страница загружена')
-        except TimeoutException:
-            self.log.print('Не удалось загрузить. Принудительная остановка')
-            self.drv.execute_script("window.stop();")
-            self.drv.quit()
-            raise
-
+        return options

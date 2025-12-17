@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['main_results.py'],
+    ['run_scheduler_test.py'],
     pathex=[],
     binaries=[],
     datas=[],
@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='main_results',
+    name='run_scheduler_test',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

@@ -1,1 +1,1 @@
-pip3 install pyinstaller
+py -m pip install pyinstaller
