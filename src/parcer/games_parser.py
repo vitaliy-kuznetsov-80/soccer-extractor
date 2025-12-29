@@ -18,6 +18,7 @@ from ..page import Page
 class _LeftHeaderDto:
     """Dto левого заголовка"""
     id: str
+    game_name: str
     line:  WebElement
     date_parce: str
     excel_row_index: int
@@ -49,7 +50,7 @@ class GamesParser:
     def parce(self,  only_id: str) -> None:
         """Парсинг игр"""
 
-        self.init_excel_file()
+        self.init_excel_file(self.__page.conf.day_offset)
 
         game_count = self._get_game_count()
 
@@ -80,8 +81,13 @@ class GamesParser:
                 # Смена даты
                 if game_id_date2 == game_id: game_date = date2
 
+                # Игра (из заголовка линии)
+                game_name = (line.find_element(By.CLASS_NAME, 'line-champ__header-link').text
+                             .replace('Футбол.', '').strip())
+
                 # Парсим и записываем левый заголовок
-                self._write_left_header(_LeftHeaderDto(game_id, line, game_date, self.__first_row, game_id, row))
+                header_dto = _LeftHeaderDto(game_id, game_name, line, game_date, self.__first_row, game_id, row)
+                self._write_left_header(header_dto)
 
                 # Кнопка раскрытия игры
                 button_play = row.find_element(By.CLASS_NAME, 'line-event__dops-toggle')
@@ -99,7 +105,7 @@ class GamesParser:
 
                 # Парсим и сохраняем игру
                 if is_exist:
-                    pp = ParamsParser(self.__log)
+                    pp = ParamsParser(self.__log, game_name)
                     save_result_dto = self._parse_game(row, pp)
                     pp.save_to_excel(save_result_dto, self.__em)
 
@@ -108,14 +114,14 @@ class GamesParser:
 
         self.__em.save()
 
-    def init_excel_file(self):
+    def init_excel_file(self, day_offset: int = 0):
         """Если есть файл Excel С датой сегодняшнего дня, то дописываем в него, иначе создаём новый"""
-        excel_filename = self.__em.get_today_filename()
+        excel_filename = self.__em.get_today_filename(day_offset)
         if excel_filename:
             self.__em.load_excel(excel_filename)
             self.__first_row = self.__em.get_row_count()
         else:
-            self.__em.init_excel('template.xls')
+            self.__em.init_excel('template.xls', day_offset)
             self.__first_row = 2
 
     # Private
@@ -154,10 +160,6 @@ class GamesParser:
     def _write_left_header(self, dto: _LeftHeaderDto):
         """Левая шапка. Получение и запись в Excel"""
 
-        # Игра (из заголовка линии)
-        game_name = (dto.line.find_element(By.CLASS_NAME, 'line-champ__header-link').text
-                     .replace('Футбол.', '').strip())
-
         # Время игры
         time_game = dto.row.find_element(By.CLASS_NAME, 'line-event__time-static').text.strip()
 
@@ -178,7 +180,7 @@ class GamesParser:
 
         self.__log.print('\n' + str(dto.excel_row_index - 1) + ': ' +
                          date_game.strftime('%d.%m.%y') + ' ' + time_game + ': ' +
-                         game_name + ': ' + team1 + ' / ' + team2 + ': ' + dto.game_id)
+                         dto.game_name + ': ' + team1 + ' / ' + team2 + ': ' + dto.game_id)
 
         # Сохранение левой шапки в Excel
         self.__em.write(dto.excel_row_index, 0, dto.id)
@@ -186,6 +188,6 @@ class GamesParser:
         self.__em.write(dto.excel_row_index, 2, date_game_report)
         self.__em.write(dto.excel_row_index, 3, weekday)
         self.__em.write(dto.excel_row_index, 4, time_game)
-        self.__em.write(dto.excel_row_index, 5, game_name)
+        self.__em.write(dto.excel_row_index, 5, dto.game_name)
         self.__em.write(dto.excel_row_index, 6, team1)
         self.__em.write(dto.excel_row_index, 7, team2)

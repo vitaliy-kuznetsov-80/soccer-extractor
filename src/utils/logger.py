@@ -4,17 +4,18 @@ from logging import Logger as DefLogger, FileHandler
 from pathlib import Path
 
 from . import Utils
+from . import Config
 
 LOGS_FOLDER_NAME = 'logs'
 
 class Logger:
     """Логгер"""
     __log: DefLogger
-    __in_console: bool
+    __conf: Config
     __file_handler: FileHandler
 
-    def __init__(self, in_console: bool, postfix: str = '') -> None:
-        self.__in_console = in_console
+    def __init__(self, conf: Config, postfix: str = '') -> None:
+        self.__conf = conf
         # Создание папки логов, если нет
         Path(LOGS_FOLDER_NAME).mkdir(parents=True, exist_ok=True)
 
@@ -26,7 +27,7 @@ class Logger:
         self.__log = logging.getLogger(__name__ + postfix)
         self.__log.setLevel(logging.INFO)
 
-        if in_console:
+        if conf.log_in_console:
             # Логирование в консоль
             logging.basicConfig(
                 level=logging.INFO,
@@ -38,23 +39,27 @@ class Logger:
             self.__file_handler.setFormatter(formatter)
             self.__log.addHandler(self.__file_handler)
 
-    @staticmethod
-    def _get_log_filename(postfix: str = '') -> str:
+    def _get_log_filename(self, postfix: str = '') -> str:
         """Генерирует имя файла лога.
         Args:
             postfix: Дополнительный постфикс для имени файла.
         Returns:
             Полный путь к файлу лога.
         """
-        filename = Utils.get_filename()
+        filename = Utils.get_filename(self.__conf.day_offset)
         return  os.path.join(LOGS_FOLDER_NAME, filename + '_' + postfix + '.log')
 
-    def print(self, value: str):
+    def print(self, value: str, in_console: bool = False):
         self.__log.info(value)
+
+        if self.__conf.log_in_console:
+            return
+        if in_console:
+            print(value)
 
     def close_file(self) -> None:
         """Закрывает файл лога"""
-        if  self.__in_console:
+        if  self.__conf.log_in_console:
             return
 
         self.__file_handler.flush()

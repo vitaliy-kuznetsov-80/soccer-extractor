@@ -18,9 +18,10 @@ class Region(Enum):
 class Utils:
 
     @staticmethod
-    def get_date_stamp() -> str:
+    def get_date_stamp(hours_offset: int = 0) -> str:
         """Возвращает текущую дату в формате dd.mm.yyyy"""
-        current_date_time = datetime.now()
+        time_delta = timedelta(hours=hours_offset)
+        current_date_time = datetime.now() + time_delta
         return Utils.get_date_stamp_by_date(current_date_time)
 
     @staticmethod
@@ -29,10 +30,10 @@ class Utils:
         return date_time.strftime('%d.%m.%Y')
 
     @staticmethod
-    def get_filename() -> str:
+    def get_filename(hours_offset: int = 0) -> str:
         """Генерирует имя файла на основе текущей даты и времени в формате dd.mm.yyyy_HH.MM.SS"""
         current_date_time = datetime.now()
-        time_stamp = Utils.get_date_stamp() + '_' + current_date_time.strftime('%H.%M.%S')
+        time_stamp = Utils.get_date_stamp(hours_offset) + '_' + current_date_time.strftime('%H.%M.%S')
         return time_stamp
 
     @staticmethod
@@ -69,3 +70,7 @@ class Utils:
         # Convert to hours
         offset_hours = offset_seconds / 3600
         return offset_hours
+
+    @staticmethod
+    def normalize_text(text: str) -> str:
+        return text.strip().upper().replace(' ', '').replace('.', '').replace('-', '')

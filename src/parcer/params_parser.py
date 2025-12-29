@@ -27,9 +27,11 @@ class GameRowsDto:
 
 class ParamsParser:
     __log: Logger
+    __game_name: str
 
-    def __init__(self, log: Logger):
+    def __init__(self, log: Logger, game_name: str):
         self.__log = log
+        self.__game_name = ParamsParser._clean_text(game_name)
 
     def get_header_params(self, row: WebElement):
         """Параметры заголовка игры"""
@@ -68,12 +70,12 @@ class ParamsParser:
         # Индекс колонки, начиная с котрой заполняются коэффициенты
         col_index = 8
 
-        def write(value):
+        def write(value, is_gold=False):
             nonlocal col_index
             # Если не вещественное число, то прочерк
             try:
                 float(value)
-                em.write_float(dto.row_index, col_index, value)
+                em.write_float(dto.row_index, col_index, value, is_gold)
             except ValueError:
                 em.write_empty_cell(dto.row_index, col_index)
             col_index = col_index + 1

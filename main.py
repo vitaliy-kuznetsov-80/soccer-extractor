@@ -21,17 +21,17 @@ class Main:
     __region: Region
     __log: Logger
     __region_name: str
+    __start_time: datetime
 
     def __init__(self, region: Region):
         self.__region = region
         self.__region_name = str(self.__region.value)
         self.__conf = Config()
-        self.__log = Logger(self.__conf.log_in_console, self.__region_name)
+        self.__log = Logger(self.__conf, self.__region_name)
 
     def run(self, ):
-        print('Старт парсинга для региона: ' + self.__region_name.capitalize() + f" в {datetime.now()}")
-        self.__log.print('Старт для региона: ' + self.__region_name.capitalize())
-        start_time = datetime.now()
+        self.__log.print('Старт: ' + self.__region_name.capitalize()  + f" в {datetime.now()}", True)
+        self.__start_time = datetime.now()
 
         try:
             # Получение страницы
@@ -50,15 +50,14 @@ class Main:
             parce_games.parce(self.__conf.only_game_id)
 
             time.sleep(1)
-
-            end_time = datetime.now()
-            self.__log.print('Время работы: ' + str(end_time - start_time))
-            self.__log.print('Финиш')
         except Exception as e: # pylint: disable=broad-except
             self.__print_error()
         finally:
             self.__page.close()
             self.__log.close_file()
+            end_time = datetime.now()
+            self.__log.print('Конец: ' + self.__region_name.capitalize() + f" в {datetime.now()}", True)
+            self.__log.print('Время работы: ' + str(end_time - self.__start_time), True)
 
     def __print_error(self):
         self.__log.print('\n - ОШИБКА - ')
@@ -66,7 +65,7 @@ class Main:
         _, ex_value, ex_traceback = sys.exc_info()
         trace_back = traceback.extract_tb(ex_traceback)
 
-        self.__log.print('Сообщение: ' + str(ex_value))
+        self.__log.print('Сообщение ошибки: ' + str(ex_value), True)
 
         for trace in trace_back:
             self.__log.print(

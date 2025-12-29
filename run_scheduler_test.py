@@ -12,9 +12,9 @@ def datetime_to_time(dt: datetime):
     return str(dt.hour).zfill(2) + ':' + str(dt.minute).zfill(2) + ':' + str(dt.second).zfill(2)
 
 now = datetime.now()
-europe_start_datetime = (now + timedelta(minutes=5))
-america_start_datetime = now + timedelta(minutes=10)
-asia_start_datetime = now + timedelta(minutes=15)
+europe_start_datetime = now + timedelta(minutes=2)
+america_start_datetime = now + timedelta(minutes=6)
+asia_start_datetime = now + timedelta(minutes=8)
 results_start_datetime = now + timedelta(seconds=4)
 europe_start_time = datetime_to_time(europe_start_datetime)
 america_start_time = datetime_to_time(america_start_datetime)

@@ -26,11 +26,18 @@ def run_results():
     results.run()
 
 conf = Config()
+
+print('Расписание стартов:')
+print(f'  {conf.europe_start_time} Европа')
+print(f'  {conf.america_start_time} Северная Америка')
+print(f'  {conf.asia_start_time} Азия')
+print(f'  {conf.results_start_time} Результаты')
+
 every().day.at(conf.europe_start_time).do(run_europe)
-every().day.at(conf.america_start_time).do(run_america())
-every().day.at(conf.asia_start_time).do(run_asia())
-every().day.at(conf.results_start_time).do(run_results())
+every().day.at(conf.america_start_time).do(run_america)
+every().day.at(conf.asia_start_time).do(run_asia)
+every().day.at(conf.results_start_time).do(run_results)
 
 while True:
     run_pending()
-    time.sleep(60) # Пауза в 1 мин
+    time.sleep(1)

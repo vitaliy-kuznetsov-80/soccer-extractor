@@ -21,7 +21,7 @@ class Results:
         # Конфиг
         self.__conf = Config()
         # Настройка логера
-        self.__log = Logger(self.__conf.log_in_console, 'results')
+        self.__log = Logger(self.__conf, 'results')
 
     def run(self):
         print(f"Старт сбора результатов: {datetime.now()}")

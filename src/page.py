@@ -49,7 +49,11 @@ class Page:
 
         """Поиск элемента"""
         located = ec.presence_of_element_located((find_by, find_element))
-        WebDriverWait(self.drv, timeout).until(located)
+        try:
+            WebDriverWait(self.drv, timeout).until(located)
+        except TimeoutException:
+            self.log.print('Не удалось найти: ' + find_element)
+            raise TimeoutException('Не удалось найти: ' + find_element)
 
     def close(self):
         """Закрытие страницы"""
@@ -142,6 +146,7 @@ class Page:
 
     @staticmethod
     def __config_browser() -> Options:
+        """Конфигурация браузера"""
         options = webdriver.ChromeOptions()
         # Опции оптимизации загрузки
         options.add_argument('-no-sandbox')

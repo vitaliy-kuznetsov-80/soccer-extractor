@@ -1,5 +1,5 @@
 from pathlib import Path
-import json
+import json5
 
 # Имена полей JSON
 PAGE_LOAD_TIMEOUT: str = 'page_load_timeout'
@@ -14,6 +14,7 @@ EUROPE_START_TIME: str = 'europe'
 AMERICA_START_TIME: str = 'america'
 ASIA_START_TIME: str = 'asia'
 RESULTS_START_TIME: str = 'results'
+DAY_OFFSET: str = 'day_offset'
 
 class Config:
     """
@@ -32,6 +33,7 @@ class Config:
     __america_start_time: str
     __asia_start_time: str
     __results_start_time: str
+    __day_offset: int
 
     @property
     def page_load_timeout(self) -> float:
@@ -81,11 +83,15 @@ class Config:
     def retry_period(self) -> int:
         return self.__retry_period
 
+    @property
+    def day_offset(self) -> int:
+        return self.__day_offset
+
     def __init__(self):
         with open('config/appsettings.json', encoding='utf-8') as file:
             json_string = file.read()
             file.close()
-            data = json.loads(json_string)
+            data = json5.loads(json_string)
             g: dict[str, str] = data['general']
             d: dict[str, str] = data['debug']
             s: dict[str, str] = data['scheduler']
@@ -107,6 +113,7 @@ class Config:
             self.__europe_start_time = s[EUROPE_START_TIME]
             self.__america_start_time = s[AMERICA_START_TIME]
             self.__results_start_time = s[RESULTS_START_TIME]
+            self.__day_offset = int(s[DAY_OFFSET])
 
             # Локальный JSON. Заполняем только существующие поля
             file_local_path = Path('config/appsettings.local.json')
@@ -114,7 +121,7 @@ class Config:
             with open(file_local_path, encoding='utf-8') as file_local:
                 json_local_string = file_local.read()
                 file_local.close()
-                data_local = json.loads(json_local_string)
+                data_local = json5.loads(json_local_string)
                 if 'general' in data_local:
                     gl: dict[str, str] = data_local['general']
                     if PAGE_LOAD_TIMEOUT in gl: self.__page_load_timeout = int(gl[PAGE_LOAD_TIMEOUT])
@@ -133,3 +140,4 @@ class Config:
                     if EUROPE_START_TIME in sl: self.__europe_start_time = sl[EUROPE_START_TIME]
                     if AMERICA_START_TIME in sl: self.__america_start_time = sl[AMERICA_START_TIME]
                     if RESULTS_START_TIME in sl: self.__results_start_time = sl[RESULTS_START_TIME]
+                    if DAY_OFFSET in sl: self.__day_offset = int(sl[DAY_OFFSET])
