@@ -24,16 +24,14 @@ class Results:
         self.__log = Logger(self.__conf, 'results')
 
     def run(self):
-        print(f"Старт сбора результатов: {datetime.now()}")
+        self.__log.print(f"Старт: Сбор результатов: {datetime.now()}", True)
 
         # Получение имени файла и проверка наличия вечрашнего дня
         excel_filename = ExcelManager.get_yesterday_filename()
         if not excel_filename:
-            self.__log.print("Файл вчерашнего дня не найден")
-            print("Файл вчерашнего дня не найден")
+            self.__log.print("Файл вчерашнего дня не найден", True)
             return
 
-        self.__log.print('Старт')
         start_time = datetime.now()
 
         def parce_results(_url: str) -> None:
@@ -53,8 +51,8 @@ class Results:
             parce_results(url_today) # Парсинг сегодня
 
             end_time = datetime.now()
-            self.__log.print('Время работы: ' + str(end_time - start_time))
-            self.__log.print('Финиш')
+            self.__log.print('Конец: Сбор результатов', True)
+            self.__log.print('Время работы: ' + str(end_time - start_time), True)
         except Exception as e: # pylint: disable=broad-except
             self.__print_error()
         finally:

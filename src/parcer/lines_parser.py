@@ -1,31 +1,29 @@
 """Пометка линий чек-боксами для загрузки игр"""
-from dataclasses import dataclass
 
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.by import By
 
+from .. import LineDto, ParceResultsDto, Region
 from ..utils import Utils
-from ..utils import Region
 from ..utils import Logger
 from ..page import Page
 
-@dataclass
-class Line:
-    id: str
-    name_original: str
-    name_white: str
-
 class LinesParser:
     """Загрузка игр линий"""
+    __parce_result: ParceResultsDto
     __page: Page
     __container: WebElement
     __log: Logger
-    __game_list: list[Line] = []
 
-    def __init__(self, page: Page, log: Logger):
-        self.__page = page
-        self.__container = page.container
-        self.__log = log
+    def __init__(self, parce_result: ParceResultsDto):
+        self.__parce_result = parce_result
+        self.__page = parce_result.page
+        self.__container = parce_result.page.container
+        self.__log = parce_result.log
+
+    @property
+    def parce_result(self) -> ParceResultsDto:
+        return self.__parce_result
 
     def lost_lines(self) -> None:
         """Проверка линий, которые недоступны для парсинга"""
@@ -108,8 +106,8 @@ class LinesParser:
                     line_name_white = item
                     break
 
-            line_obj = Line(line_id, line_name_original,line_name_white)
-            self.__game_list.append(line_obj)
+            line_obj = LineDto(line_id, line_name_original,line_name_white)
+            self.__parce_result.lines[line_id] = line_obj
             self.__log.print('  ' + line_name_original)
 
             # Пометка линии через щелчок по checkbox
@@ -122,7 +120,7 @@ class LinesParser:
 
         self.__log.print('Фильтрованных линий: ' + str(count))
 
-    def load_games(self) -> None:
+    def load_games_with_wait(self) -> None:
         """Загрузка игр для выбранных линий"""
         # Жмём "Показать" для отображения игр
         button_find = self.__container.find_element(By.CLASS_NAME, 'line__controls-button')

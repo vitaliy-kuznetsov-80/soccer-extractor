@@ -2,36 +2,26 @@
 
 from datetime import date
 import time
-from dataclasses import dataclass
 
 from selenium.common import NoSuchElementException, TimeoutException, WebDriverException, StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
-from src.parcer.params_parser import ParamsParser, SaveResultDto
+from .Header import HeaderLine
+from .params_parser import SaveResultDto, ParamsParser
+from .. import ParceResultsDto
+from ..parce_results_dto import GameDto
 from ..utils import Logger
 from ..utils import Utils
 from ..utils import ExcelManager
 from ..page import Page
 
-@dataclass
-class _LeftHeaderDto:
-    """Dto левого заголовка"""
-    id: str
-    game_name: str
-    line:  WebElement
-    date_parce: str
-    excel_row_index: int
-    game_id: str
-    row: WebElement
-
 months = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
 dws = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС']
-date_current: date = date.today() # Текущая дата без времени
-year_current: int = date_current.year # Текущий год
 
 class GamesParser:
     """Парсинг игр"""
+    __parce_result: ParceResultsDto
     __page: Page
     __container: WebElement
     __log: Logger
@@ -39,20 +29,25 @@ class GamesParser:
     __first_row: int
     __em: ExcelManager
 
-    def __init__(self, page: Page, region_name: str, log: Logger):
-        self.__page = page
-        self.__container = page.container
-        self.__region_name = region_name
-        self.__log = log
+    def __init__(self, parce_result: ParceResultsDto):
+        self.__parce_result = parce_result
+        self.__page = parce_result.page
+        self.__container = parce_result.page.container
+        self.__region_name = parce_result.region_name
+        self.__log = parce_result.log
         self.__em = ExcelManager()
         self.__first_row = 0
+
+    @property
+    def parce_result(self) -> ParceResultsDto:
+        return self.__parce_result
 
     def parce(self,  only_id: str) -> None:
         """Парсинг игр"""
 
         self.init_excel_file(self.__page.conf.day_offset)
 
-        game_count = self._get_game_count()
+        self._get_game_count()
 
         # Запоминаем предыдущую кнопку для закрытия, перед открытием нового
         button_prev_play = None
@@ -68,10 +63,10 @@ class GamesParser:
             # Цикл по играм
             game_date = date1
             for row in rows:
-                # Получение Id игры (для лога и отладки)
-                game_id = Utils.get_id(row.find_element(By.TAG_NAME, 'a'), 'ts=24')
+                # Получение полного Id игры (для лога и отладки)
+                game_full_id = Utils.get_id(row.find_element(By.TAG_NAME, 'a'), 'ts=24')
                 # Поиск конкретной игры, если есть
-                if only_id and game_id != only_id: continue
+                if only_id and game_full_id != only_id: continue
 
                 # Закрываем предыдущий
                 if button_prev_play is not None:
@@ -79,22 +74,24 @@ class GamesParser:
                     time.sleep(1)
 
                 # Смена даты
-                if game_id_date2 == game_id: game_date = date2
+                if game_id_date2 == game_full_id: game_date = date2
 
                 # Игра (из заголовка линии)
                 game_name = (line.find_element(By.CLASS_NAME, 'line-champ__header-link').text
                              .replace('Футбол.', '').strip())
 
                 # Парсим и записываем левый заголовок
-                header_dto = _LeftHeaderDto(game_id, game_name, line, game_date, self.__first_row, game_id, row)
-                self._write_left_header(header_dto)
+                self._write_left_header(game_full_id, game_name, game_date, self.__first_row, row)
+                fr = self.__parce_result.lines
 
                 # Кнопка раскрытия игры
                 button_play = row.find_element(By.CLASS_NAME, 'line-event__dops-toggle')
                 if button_play.tag_name != 'button': continue  # Игнор не кнопок
 
-                # Клик по раскрывашке (правая колонка). Если 1 игра, то она раскрывается сразу без клика
-                if game_count > 1: self.__page.click(button_play)
+                # Клик по раскрывашке (правая колонка)
+                # if game_count > 1: # Если 1 игра, то она раскрывается сразу без клика.
+                # Был баг на стороне bet city, но потом исправили
+                self.__page.click(button_play)
                 is_exist = True
                 try:
                     # Ожидаем прогрузки по названию таблицы нижней части коэффициентов (должна быть всегда)
@@ -105,8 +102,11 @@ class GamesParser:
 
                 # Парсим и сохраняем игру
                 if is_exist:
-                    pp = ParamsParser(self.__log, game_name)
-                    save_result_dto = self._parse_game(row, pp)
+                    line_full_id_list = game_full_id.split('/')
+                    line_id = line_full_id_list[0]
+                    game_id = line_full_id_list[1]
+                    pp = ParamsParser(self.__parce_result, line_id, game_id)
+                    save_result_dto = self._parse_game(row)
                     pp.save_to_excel(save_result_dto, self.__em)
 
                 button_prev_play = button_play  # Запоминаем кнопку раскрытия
@@ -149,28 +149,30 @@ class GamesParser:
             game_id_date2 = Utils.get_id(a_tag, 'ts=24')
         return date1, date2, game_id_date2
 
-    def _parse_game(self, row: WebElement, pp: ParamsParser):
+    def _parse_game(self, row: WebElement) -> SaveResultDto:
         """Парсинг игры"""
-        header_line = pp.get_header_params(row)
+        header_line = HeaderLine.parse(row)
         # Получение и запись коэффициентов
         row_area = row.find_element(By.XPATH, '..')
         save_result_dto = SaveResultDto(row_area, header_line, self.__first_row)
         return save_result_dto
 
-    def _write_left_header(self, dto: _LeftHeaderDto):
+    def _write_left_header(self, line_full_id: str, game_name: str, date_parce: str, excel_row_index: int, row: WebElement) -> None:
         """Левая шапка. Получение и запись в Excel"""
 
         # Время игры
-        time_game = dto.row.find_element(By.CLASS_NAME, 'line-event__time-static').text.strip()
+        time_game = row.find_element(By.CLASS_NAME, 'line-event__time-static').text.strip()
 
         # Команды
-        teams_block = dto.row.find_element(By.CLASS_NAME, 'line-event__name-teams')
+        teams_block = row.find_element(By.CLASS_NAME, 'line-event__name-teams')
         teams = teams_block.find_elements(By.XPATH, './/*')
         team1 = teams[0].text.strip()
         team2 = teams[1].text.strip()
 
         # Дата в формате: dd.mm
-        date_parce_list = dto.date_parce.split(' ')
+        date_current: date = date.today()  # Текущая дата без времени
+        year_current: int = date_current.year  # Текущий год
+        date_parce_list = date_parce.split(' ')
         date_number: int = int(date_parce_list[0].strip())  # Номер даты
         date_month: int = months.index(date_parce_list[1].strip()[:3].lower()) + 1  # Номер месяца
         date_game: date = date(year_current, date_month, date_number)  # Текущая дата (полная)
@@ -178,16 +180,23 @@ class GamesParser:
         index_weekday: int = date_game.weekday()
         weekday = dws[index_weekday]  # День недели
 
-        self.__log.print('\n' + str(dto.excel_row_index - 1) + ': ' +
+        self.__log.print('\n' + str(excel_row_index - 1) + ': ' +
                          date_game.strftime('%d.%m.%y') + ' ' + time_game + ': ' +
-                         dto.game_name + ': ' + team1 + ' / ' + team2 + ': ' + dto.game_id)
+                         game_name + ': ' + team1 + ' / ' + team2 + ': ' + line_full_id)
 
         # Сохранение левой шапки в Excel
-        self.__em.write(dto.excel_row_index, 0, dto.id)
-        self.__em.write(dto.excel_row_index, 1, self.__region_name)
-        self.__em.write(dto.excel_row_index, 2, date_game_report)
-        self.__em.write(dto.excel_row_index, 3, weekday)
-        self.__em.write(dto.excel_row_index, 4, time_game)
-        self.__em.write(dto.excel_row_index, 5, dto.game_name)
-        self.__em.write(dto.excel_row_index, 6, team1)
-        self.__em.write(dto.excel_row_index, 7, team2)
+        self.__em.write(excel_row_index, 0, line_full_id)
+        self.__em.write(excel_row_index, 1, self.__region_name)
+        self.__em.write(excel_row_index, 2, date_game_report)
+        self.__em.write(excel_row_index, 3, weekday)
+        self.__em.write(excel_row_index, 4, time_game)
+        self.__em.write(excel_row_index, 5, game_name)
+        self.__em.write(excel_row_index, 6, team1)
+        self.__em.write(excel_row_index, 7, team2)
+
+        line_full_id_list = line_full_id.split('/')
+        line_id = line_full_id_list[0]
+        game_id = line_full_id_list[1]
+
+        line_dto = self.__parce_result.lines[line_id]
+        line_dto.games[game_id] = (GameDto(line_full_id, game_id, game_name, date_game_report, time_game, weekday, team1, team2))

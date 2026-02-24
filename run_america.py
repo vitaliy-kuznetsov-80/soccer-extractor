@@ -1,5 +1,5 @@
 from main import Main
-from src.utils import Region
+from src import Region
 
 main = Main(Region.AMERICA)
 main.run()

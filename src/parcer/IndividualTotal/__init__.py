@@ -1,0 +1,1 @@
+from .individual_total_parse import IndividualTotal

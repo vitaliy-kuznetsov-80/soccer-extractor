@@ -15,3 +15,4 @@ set /p Version=<version
 tar -a -c -f release_%Version%.zip dist
 
 rmdir /s /q dist
+del *.spec

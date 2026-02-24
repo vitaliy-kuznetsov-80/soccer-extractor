@@ -3,17 +3,11 @@
 import re
 from datetime import datetime, timedelta
 import time
-from enum import Enum
 
 from selenium.webdriver.remote.webelement import WebElement
 
 BASE_URL = 'https://betcity.ru/ru/'
 BASE_API_URL = 'https://ad.betcity.ru/d/off/'
-
-class Region(Enum):
-    EUROPE = "europe"
-    AMERICA = "america"
-    ASIA = "asia"
 
 class Utils:
 
@@ -74,3 +68,8 @@ class Utils:
     @staticmethod
     def normalize_text(text: str) -> str:
         return text.strip().upper().replace(' ', '').replace('.', '').replace('-', '')
+
+    @staticmethod
+    def clean_text(value: str) -> str:
+        """Очистка текста"""
+        return value.strip().replace('\n', ' ').replace('  ', ' ').replace('  ', ' ')

@@ -120,11 +120,24 @@ class Page:
     def _get_page(self) -> bool:
         """Получить DOM дерево страницы"""
         options = self.__config_browser()
-        self.drv = webdriver.Chrome(options)
+
+        # Получение драйвера Chrome 3 раза с периодом 1 сек
+        for attempt in range(3):
+            try:
+                self.drv = webdriver.Chrome(options)
+            except Exception as e:
+                self.log.print('Ошибка получения драйвера. Таймаут')
+                if attempt < 2:
+                    time.sleep(1)
+                else:
+                    self.log.print("Принудительная остановка: " + str(e))
+                    return False
+
         self.drv.maximize_window() # Полноэкранный режим
 
         self.drv.set_page_load_timeout(self.conf.page_load_timeout) # Тамаут принудительной оставновки загрузки
 
+        # Получение страницы с политикой retry
         for attempt in range(self.conf.retry_count):
             try:
                 self.log.print('Попытка получения страницы: ' + str(attempt + 1))
@@ -138,7 +151,7 @@ class Page:
                 if attempt < self.conf.retry_count - 1:
                     time.sleep(self.conf.retry_count * 1)
                 else:
-                    print("Принудительная остановка")
+                    self.log.print("Принудительная остановка")
                     self.drv.execute_script("window.stop();")
                     self.drv.quit()
                     return False

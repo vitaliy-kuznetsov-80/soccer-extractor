@@ -1,0 +1,1 @@
+from .both_will_score_parse import BothWillScore

@@ -4,10 +4,10 @@ import sys
 import time
 import traceback
 
+from src.parce_results_dto import Region, ParceResultsDto
 from src.page import Page
 from src.utils import Config
 from src.utils import Logger
-from src.utils import Region
 from src.parcer import LinesParser
 from src.parcer import GamesParser
 
@@ -34,20 +34,34 @@ class Main:
         self.__start_time = datetime.now()
 
         try:
+            # Чтение золотых коэффициентов
+            # with open("assets/ks.json", 'r', encoding='utf-8') as file_content:
+            #     data = json.load(file_content)
+            #     gold_matrix_list: list[GoldKMatrix] = data.get(self.__region_name, {})
+
             # Получение страницы
             self.__page = Page(url, self.__conf, self.__log, 'champs__sport')
 
-            game_loader = LinesParser(self.__page, self.__log)
-            game_loader.lost_lines() # Потеряные игры для всех регионов
+            parce_result = ParceResultsDto(self.__region, self.__region_name, self.__page, self.__log, self.__conf, self.__page.container)
+
+            game_loader = LinesParser(parce_result)
+            game_loader.lost_lines() # Потерянные игры для всех регионов
 
             # Пометка строк для получения игр
             game_loader.mark_lines(self.__conf.lines_limit, self.__conf.only_line_id, self.__region)
             # Загрузка игр для выбранных линий
-            game_loader.load_games()
+            game_loader.load_games_with_wait()
+
+            # Дополнение объекта результата, линиями игр
+            parce_result = game_loader.parce_result
 
             # Парсинг игр
-            parce_games = GamesParser(self.__page, self.__region_name, self.__log)
+            parce_games = GamesParser(parce_result)
             parce_games.parce(self.__conf.only_game_id)
+
+            # Дополнение объекта результата коэффициентами игр
+            parce_result = parce_games.parce_result
+            # json_parce_result = parce_result.to_json()
 
             time.sleep(1)
         except Exception as e: # pylint: disable=broad-except
@@ -60,12 +74,12 @@ class Main:
             self.__log.print('Время работы: ' + str(end_time - self.__start_time), True)
 
     def __print_error(self):
-        self.__log.print('\n - ОШИБКА - ')
+        self.__log.print('\n- ОШИБКА - ', True)
 
-        _, ex_value, ex_traceback = sys.exc_info()
+        exc_type, ex_value, ex_traceback = sys.exc_info()
         trace_back = traceback.extract_tb(ex_traceback)
 
-        self.__log.print('Сообщение ошибки: ' + str(ex_value), True)
+        self.__log.print('Сообщение ошибки: (' + str(exc_type) + ') - '+ str(ex_value), True)
 
         for trace in trace_back:
             self.__log.print(

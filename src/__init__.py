@@ -1,7 +1,7 @@
 from . import page
 
 from .utils import Utils
-from .utils import Region
+from .parce_results_dto import Region, ParceResultsDto, LineDto
 from .utils import Config
 from .utils import Logger
 from .utils import ExcelManager

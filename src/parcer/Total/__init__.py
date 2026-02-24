@@ -1,0 +1,1 @@
+from .total_parcer import Total

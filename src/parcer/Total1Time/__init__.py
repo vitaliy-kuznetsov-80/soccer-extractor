@@ -1,0 +1,1 @@
+from .total_1time_parse import Total1Time

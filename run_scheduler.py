@@ -4,7 +4,7 @@ import time
 
 from main import Main
 from main_results import Results
-from src.utils import Region
+from src import Region
 from src.utils import Config
 
 print(f"Старт планировщика в: {datetime.now()}")

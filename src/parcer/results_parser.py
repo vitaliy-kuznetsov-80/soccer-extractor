@@ -1,4 +1,5 @@
 """Парсинг результатов игр"""
+
 from dataclasses import dataclass
 
 from selenium.common import NoSuchElementException
@@ -54,9 +55,9 @@ class ResultParser:
             try:
                 target_a = page.container.find_element(By.XPATH, "//a[contains(@href, '" + row_id + "')]")
             except NoSuchElementException:
-                self.__em.write_empty_cell(row_index, 38)
-                self.__em.write_empty_cell(row_index, 39)
-                self.__em.write(row_index, 40, 'Не найден')
+                self.__em.write_empty_cell(row_index, 40)
+                self.__em.write_empty_cell(row_index, 41)
+                self.__em.write(row_index, 42, 'Не найден')
                 self.__log.print(row_id + ' - не найден: ')
                 continue
 
@@ -82,11 +83,11 @@ class ResultParser:
 
             # если нет результата, то отмена
             if not result.total and not result.first_time:
-                self.__em.write(row_index, 40, 'Отмена')
+                self.__em.write(row_index, 42, 'Отмена')
 
-            self.__em.write(row_index, 38, result.first_time)
-            self.__em.write(row_index, 39, result.total)
-            self.__em.write(row_index, 40, '-')
+            self.__em.write(row_index, 40, result.first_time)
+            self.__em.write(row_index, 41, result.total)
+            self.__em.write(row_index, 42, '-')
 
             self.__log.print(row_id + ' | ' + result.time + ' | ' +
                              result.team_1 + ' | ' + result.team_2 + ' | ' +
