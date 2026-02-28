@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from ..parcer_utils import ParserUtils
-from src.parce_results_dto import GameRowsDto
+from ...dto.game_row_dto import GameRowsDto
 from src import Logger
 
 from selenium.webdriver.remote.webelement import WebElement

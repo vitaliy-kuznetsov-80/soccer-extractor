@@ -1,5 +1,5 @@
 from main import Main
-from src import Region
+from src.dto.region_enum import RegionEnum
 
-main = Main(Region.EUROPE)
+main = Main(RegionEnum.EUROPE)
 main.run()

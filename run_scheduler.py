@@ -4,21 +4,21 @@ import time
 
 from main import Main
 from main_results import Results
-from src import Region
+from src.dto.region_enum import RegionEnum
 from src.utils import Config
 
 print(f"Старт планировщика в: {datetime.now()}")
 
 def run_europe():
-    main = Main(Region.EUROPE)
+    main = Main(RegionEnum.EUROPE)
     main.run()
 
 def run_america():
-    main = Main(Region.AMERICA)
+    main = Main(RegionEnum.AMERICA)
     main.run()
 
 def run_asia():
-    main = Main(Region.ASIA)
+    main = Main(RegionEnum.ASIA)
     main.run()
 
 def run_results():

@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from selenium.webdriver.remote.webelement import WebElement
 
 from .Header import HeaderLine
-# from ..KMatrix import KMatrix
-from ..parce_results_dto import ParceResultsDto
+from src.dto.parce_results_dto import ParceResultsDto
+from ..dto import KMatrixDto
 from ..utils import Logger
 from ..utils import ExcelManager
 
@@ -54,17 +54,17 @@ class ParamsParser:
         individual_total = IndividualTotal.parse(dto.element, self.__log)
 
         # Заполнение матрицы
-        # game_k_matrix = KMatrix()
-        # game_k_matrix.outcome = outcome
-        # game_k_matrix.double_result = double_result
-        # game_k_matrix.fora_0 = fora_0
-        # game_k_matrix.goals = goals
-        # game_k_matrix.both_will_score = both_will_score
-        # game_k_matrix.will_score_1_time = will_score_1_time
-        # game_k_matrix.total_1time = total_1time
-        # game_k_matrix.total = total
-        # game_k_matrix.individual_total = individual_total
-        # self.__parce_result.lines[self.__line_id].games[self.__game_id].k_matrix = game_k_matrix
+        game_k_matrix = KMatrixDto()
+        game_k_matrix.outcome = outcome
+        game_k_matrix.double_result = double_result
+        game_k_matrix.fora_0 = fora_0
+        game_k_matrix.goals = goals
+        game_k_matrix.both_will_score = both_will_score
+        game_k_matrix.will_score_1_time = will_score_1_time
+        game_k_matrix.total_1time = total_1time
+        game_k_matrix.total = total
+        game_k_matrix.individual_total = individual_total
+        self.__parce_result.lines[self.__line_id].games[self.__game_id].k_matrix = game_k_matrix
 
         # Индекс колонки, начиная с котрой заполняются коэффициенты
         col_index = 8
@@ -80,7 +80,8 @@ class ParamsParser:
                 em.write_empty_cell(dto.row_index, col_index)
             col_index = col_index + 1
 
-        # gold = self.__parce_result.gold_matrix_list
+        # k_region_gold = self.__parce_result.k_matrix_gold
+        # k_line_matrix_gold = k_region_gold.get(self.__line_id)
 
         write(outcome.k_1)
         write(outcome.k_x)

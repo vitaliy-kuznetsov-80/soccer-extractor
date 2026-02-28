@@ -4,7 +4,9 @@ import sys
 import time
 import traceback
 
-from src.parce_results_dto import Region, ParceResultsDto
+from src.dto.k_matrix_gold_dto import MatrixGoldRegionDto, load_from_json
+from src.dto.parce_results_dto import ParceResultsDto
+from src.dto.region_enum import RegionEnum
 from src.page import Page
 from src.utils import Config
 from src.utils import Logger
@@ -18,12 +20,12 @@ class Main:
     """Основной класс программы"""
     __page: Page
     __conf: Config
-    __region: Region
+    __region: RegionEnum
     __log: Logger
     __region_name: str
     __start_time: datetime
 
-    def __init__(self, region: Region):
+    def __init__(self, region: RegionEnum):
         self.__region = region
         self.__region_name = str(self.__region.value)
         self.__conf = Config()
@@ -34,10 +36,7 @@ class Main:
         self.__start_time = datetime.now()
 
         try:
-            # Чтение золотых коэффициентов
-            # with open("assets/ks.json", 'r', encoding='utf-8') as file_content:
-            #     data = json.load(file_content)
-            #     gold_matrix_list: list[GoldKMatrix] = data.get(self.__region_name, {})
+            # k_matrix_gold = load_from_json(self.__region, "assets/europe.json")
 
             # Получение страницы
             self.__page = Page(url, self.__conf, self.__log, 'champs__sport')
@@ -60,8 +59,9 @@ class Main:
             parce_games.parce(self.__conf.only_game_id)
 
             # Дополнение объекта результата коэффициентами игр
-            parce_result = parce_games.parce_result
-            # json_parce_result = parce_result.to_json()
+            # parce_result = parce_games.parce_result
+            # print(parce_result)
+            # parce_result.save('')
 
             time.sleep(1)
         except Exception as e: # pylint: disable=broad-except

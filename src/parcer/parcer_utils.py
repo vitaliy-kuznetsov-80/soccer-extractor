@@ -5,7 +5,9 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.common import NoSuchElementException
 
 from src import Utils, Logger
-from src.parce_results_dto import GameRowsDto, MB
+from src.dto.mb_dto import MB
+from src.dto.game_row_dto import GameRowsDto
+
 
 class ParserUtils:
     @staticmethod

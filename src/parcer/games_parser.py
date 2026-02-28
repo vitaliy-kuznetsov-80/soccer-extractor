@@ -9,8 +9,8 @@ from selenium.webdriver.remote.webelement import WebElement
 
 from .Header import HeaderLine
 from .params_parser import SaveResultDto, ParamsParser
-from .. import ParceResultsDto
-from ..parce_results_dto import GameDto
+from src.dto.game_dto import GameDto
+from ..dto import ParceResultsDto
 from ..utils import Logger
 from ..utils import Utils
 from ..utils import ExcelManager
@@ -82,15 +82,12 @@ class GamesParser:
 
                 # Парсим и записываем левый заголовок
                 self._write_left_header(game_full_id, game_name, game_date, self.__first_row, row)
-                fr = self.__parce_result.lines
 
                 # Кнопка раскрытия игры
                 button_play = row.find_element(By.CLASS_NAME, 'line-event__dops-toggle')
                 if button_play.tag_name != 'button': continue  # Игнор не кнопок
 
                 # Клик по раскрывашке (правая колонка)
-                # if game_count > 1: # Если 1 игра, то она раскрывается сразу без клика.
-                # Был баг на стороне bet city, но потом исправили
                 self.__page.click(button_play)
                 is_exist = True
                 try:
@@ -199,4 +196,5 @@ class GamesParser:
         game_id = line_full_id_list[1]
 
         line_dto = self.__parce_result.lines[line_id]
-        line_dto.games[game_id] = (GameDto(line_full_id, game_id, game_name, date_game_report, time_game, weekday, team1, team2))
+        game_dto = GameDto(line_full_id, game_id, game_name, date_game_report, time_game, weekday, team1, team2)
+        line_dto.games[game_id] = game_dto

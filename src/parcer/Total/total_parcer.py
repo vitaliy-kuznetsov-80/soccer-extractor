@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
 from src import Logger
-from src.parce_results_dto import MB, GameRowsDto
+from ...dto.mb_dto import MB
+from ...dto.game_row_dto import GameRowsDto
 from ..parcer_utils import ParserUtils
 from src.parcer.Header import HeaderLine
 from selenium.webdriver.remote.webelement import WebElement

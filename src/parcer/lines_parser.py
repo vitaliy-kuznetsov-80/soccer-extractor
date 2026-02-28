@@ -3,7 +3,9 @@
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.by import By
 
-from .. import LineDto, ParceResultsDto, Region
+from ..dto import ParceResultsDto
+from ..dto.line_dto import LineDto
+from ..dto.region_enum import RegionEnum
 from ..utils import Utils
 from ..utils import Logger
 from ..page import Page
@@ -31,9 +33,9 @@ class LinesParser:
 
         # Получаем списки
         ignore_list = self._get_ignore_list()
-        europe_list = self._get_white_list(Region.EUROPE)
-        america_list = self._get_white_list(Region.AMERICA)
-        asia_list = self._get_white_list(Region.ASIA)
+        europe_list = self._get_white_list(RegionEnum.EUROPE)
+        america_list = self._get_white_list(RegionEnum.AMERICA)
+        asia_list = self._get_white_list(RegionEnum.ASIA)
 
         white_list = set(europe_list + america_list + asia_list)
 
@@ -65,7 +67,7 @@ class LinesParser:
         if not is_lost:
             self.__log.print('ОТСУТСТВУЮТ')
 
-    def mark_lines(self, limit_count: int, only_id: str, region: Region) -> None:
+    def mark_lines(self, limit_count: int, only_id: str, region: RegionEnum) -> None:
         """Пометка строк для получения игр через checkbox"""
         rows = self._get_lines()
         self.__log.print('Найдено линий: ' + str(len(rows)))
@@ -137,7 +139,7 @@ class LinesParser:
         return Utils.get_text_list('ignore-soccer.txt')
 
     @staticmethod
-    def _get_white_list(region: Region) -> list[str]:
+    def _get_white_list(region: RegionEnum) -> list[str]:
         """Белый список"""
         return Utils.get_text_list(str(region.value) + '.txt')
 
