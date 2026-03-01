@@ -29,7 +29,7 @@ class Total1Time:
         outcome_by_time_1t = Total1Time.get_outcome_by_time_1t(el, log)
 
         t1_b = total_1time_extra.k_1b
-        if t1_b == '':
+        if not t1_b:
             t1_b = outcome_by_time_1t.k_1b
 
         t1_5_b = outcome_by_time_1t.k_1_5b
