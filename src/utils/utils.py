@@ -8,6 +8,9 @@ from selenium.webdriver.remote.webelement import WebElement
 
 BASE_URL = 'https://betcity.ru/ru/'
 BASE_API_URL = 'https://ad.betcity.ru/d/off/'
+RESULT_FIRST_TIME_COLUMN_INDEX = 40
+RESULT_TOTAL_COLUMN_INDEX = 41
+RESULT_COMMENT = 42
 
 class Utils:
 

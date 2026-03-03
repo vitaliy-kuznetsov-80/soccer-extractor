@@ -10,6 +10,8 @@ from ..utils import Logger
 from ..utils import Utils
 from ..utils import ExcelManager
 from ..page import Page
+from ..utils.utils import RESULT_COMMENT, RESULT_FIRST_TIME_COLUMN_INDEX, RESULT_TOTAL_COLUMN_INDEX
+
 
 @dataclass
 class _ResultDto:
@@ -55,9 +57,9 @@ class ResultParser:
             try:
                 target_a = page.container.find_element(By.XPATH, "//a[contains(@href, '" + row_id + "')]")
             except NoSuchElementException:
-                self.__em.write_empty_cell(row_index, 40)
-                self.__em.write_empty_cell(row_index, 41)
-                self.__em.write(row_index, 42, 'Не найден')
+                self.__em.write_empty_cell(row_index, RESULT_FIRST_TIME_COLUMN_INDEX)
+                self.__em.write_empty_cell(row_index, RESULT_TOTAL_COLUMN_INDEX)
+                self.__em.write(row_index, RESULT_COMMENT, 'Не найден')
                 self.__log.print(row_id + ' - не найден: ')
                 continue
 
@@ -83,11 +85,11 @@ class ResultParser:
 
             # если нет результата, то отмена
             if not result.total and not result.first_time:
-                self.__em.write(row_index, 42, 'Отмена')
+                self.__em.write(row_index, RESULT_COMMENT, 'Отмена')
 
-            self.__em.write(row_index, 40, result.first_time)
-            self.__em.write(row_index, 41, result.total)
-            self.__em.write(row_index, 42, '-')
+            self.__em.write(row_index, RESULT_FIRST_TIME_COLUMN_INDEX, result.first_time)
+            self.__em.write(row_index, RESULT_TOTAL_COLUMN_INDEX, result.total)
+            self.__em.write(row_index, RESULT_COMMENT, '-')
 
             self.__log.print(row_id + ' | ' + result.time + ' | ' +
                              result.team_1 + ' | ' + result.team_2 + ' | ' +

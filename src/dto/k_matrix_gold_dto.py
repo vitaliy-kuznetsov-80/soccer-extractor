@@ -5,10 +5,10 @@ from src.dto.region_enum import RegionEnum
 
 type MatrixGoldRegionDto = dict[str, MatrixGoldDto]
 
-def load_from_json(region: RegionEnum, file_path: str = "assets/ks.json") -> MatrixGoldRegionDto | None:
+def load_from_json(region_name: str) -> MatrixGoldRegionDto | None:
     """Загружает данные из JSON файла"""
     try:
-        with open(file_path, 'r', encoding='utf-8') as file_content:
+        with open('assets/' + region_name + '.json', 'r', encoding='utf-8') as file_content:
             data = json.load(file_content)
 
         # Загружаем k_matrix

@@ -8,6 +8,7 @@ from xlutils.copy import copy
 from xlwt import Workbook, Worksheet, add_palette_colour, easyxf
 
 from . import Utils
+from .utils import RESULT_FIRST_TIME_COLUMN_INDEX, RESULT_TOTAL_COLUMN_INDEX
 
 add_palette_colour("empty_color", 0x21)
 add_palette_colour("gold_color", 0x22)
@@ -57,8 +58,8 @@ class ExcelManager:
         for row_index in range(self.get_row_count()):
             if row_index < 2: continue
             game_id = str(self.__wb_sheet.cell_value(row_index, 0))
-            result_1 = str(self.__wb_sheet.cell_value(row_index, 37))
-            result_2 = str(self.__wb_sheet.cell_value(row_index, 38))
+            result_1 = str(self.__wb_sheet.cell_value(row_index, RESULT_FIRST_TIME_COLUMN_INDEX))
+            result_2 = str(self.__wb_sheet.cell_value(row_index, RESULT_TOTAL_COLUMN_INDEX))
             # Добавляем, если нет результатов
             if game_id and (not result_1 or not result_2): rows.append((row_index, game_id))
         return rows
