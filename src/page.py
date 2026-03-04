@@ -55,6 +55,17 @@ class Page:
             self.log.print('Не удалось найти: ' + find_element)
             raise TimeoutException('Не удалось найти: ' + find_element)
 
+    def wait_disappear(self, find_by: str, find_element: str, timeout:  int | None = None) -> None:
+        if timeout is None: timeout = self.conf.element_load_timeout
+
+        """Поиск элемента"""
+        located = ec.invisibility_of_element_located((find_by, find_element))
+        try:
+            WebDriverWait(self.drv, timeout).until(located)
+        except TimeoutException:
+            self.log.print('Элемент не скрылся: ' + find_element)
+            raise TimeoutException('Элемент не скрылся: ' + find_element)
+
     def close(self):
         """Закрытие страницы"""
         self.drv.close()

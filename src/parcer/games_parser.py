@@ -49,9 +49,6 @@ class GamesParser:
 
         self._get_game_count()
 
-        # Запоминаем предыдущую кнопку для закрытия, перед открытием нового
-        button_prev_play = None
-
         # Группы по линиям
         lines = self.__container.find_elements(By.CLASS_NAME, 'line__champ')
         for line in lines:
@@ -68,11 +65,6 @@ class GamesParser:
                 # Поиск конкретной игры, если есть
                 if only_id and game_full_id != only_id: continue
 
-                # Закрываем предыдущий
-                if button_prev_play is not None:
-                    self.__page.click(button_prev_play)
-                    time.sleep(1)
-
                 # Смена даты
                 if game_id_date2 == game_full_id: game_date = date2
 
@@ -85,13 +77,17 @@ class GamesParser:
 
                 # Кнопка раскрытия игры
                 button_play = row.find_element(By.CLASS_NAME, 'line-event__dops-toggle')
-                if button_play.tag_name != 'button': continue  # Игнор не кнопок
+                # Игнор не кнопок
+                if button_play.tag_name != 'button':
+                    self.__log.print("Игра пустая. Пропуск")
+                    continue
 
                 # Клик по раскрывашке (правая колонка)
                 self.__page.click(button_play)
                 is_exist = True
+
+                # Ожидаем прогрузки по названию таблицы нижней части коэффициентов (должна быть всегда)
                 try:
-                    # Ожидаем прогрузки по названию таблицы нижней части коэффициентов (должна быть всегда)
                     self.__page.wait(By.XPATH, "//span[starts-with(., 'Тотал')]")
                 except (NoSuchElementException, StaleElementReferenceException, TimeoutException, WebDriverException):
                     is_exist = False
@@ -106,7 +102,16 @@ class GamesParser:
                     save_result_dto = self._parse_game(row)
                     pp.save_to_excel(save_result_dto, self.__em)
 
-                button_prev_play = button_play  # Запоминаем кнопку раскрытия
+                # Закрываем игру
+                self.__page.click(button_play)
+                # Ожидаем закрытия (отсутствие класса dops)
+                try:
+                  self.__page.wait_disappear(By.CLASS_NAME, "dops")
+                  self.__log.print(str(self.__first_row - 1) + ' игра закрыта')
+                except (NoSuchElementException, StaleElementReferenceException, TimeoutException, WebDriverException):
+                  self.__log.print(str(self.__first_row - 1) + ' НЕ закрыта')
+                  raise
+
                 self.__first_row = self.__first_row + 1
 
         self.__em.save()
