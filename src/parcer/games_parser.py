@@ -1,7 +1,6 @@
 """Методы парсинга"""
 
-from datetime import date
-import time
+from datetime import date, timedelta
 
 from selenium.common import NoSuchElementException, TimeoutException, WebDriverException, StaleElementReferenceException
 from selenium.webdriver.common.by import By
@@ -63,10 +62,12 @@ class GamesParser:
                 # Получение полного Id игры (для лога и отладки)
                 game_full_id = Utils.get_id(row.find_element(By.TAG_NAME, 'a'), 'ts=24')
                 # Поиск конкретной игры, если есть
-                if only_id and game_full_id != only_id: continue
+                if only_id and game_full_id != only_id:
+                    continue
 
                 # Смена даты
-                if game_id_date2 == game_full_id: game_date = date2
+                if game_id_date2 == game_full_id:
+                    game_date = date2
 
                 # Игра (из заголовка линии)
                 game_name = (line.find_element(By.CLASS_NAME, 'line-champ__header-link').text
@@ -136,20 +137,29 @@ class GamesParser:
         return row_count
 
     @staticmethod
-    def _get_game_date(line:  WebElement) -> tuple[str, str, str]:
+    def _get_game_date(line:  WebElement) -> tuple[date, date | None, str | None]:
         """Дата в формате: {Дата} {Название месяца}. Например: 9 февраля"""
         date_list = line.find_elements(By.CLASS_NAME, 'line-champ__date')
-        date1 = date_list[0].text.strip()  # Дата 1 есть всегда
-        date2 = ''  # Дата 2 встречается после 00:00
-        game_id_date2 = ''  # id игры, начиная с которой, меняется дата
+        date1 = date_list[0].text.lower().strip()  # Дата 1 есть всегда
+
+        today_date = date.today()
+        tomorrow_date = today_date + timedelta(days=1)
+
+        # Ловим Завтра
+        if 'завтра' in date1:
+            return tomorrow_date, None, None
+
+        # Если не завтра, то сегодня
+        game_id_date2: str | None = None
+        # Тк завтра идёт всегда за сегодня, то при длине = 2, берем завтрашнюю дату и id игры начиная с этой даты
         if len(date_list) == 2:
-            date2 = date_list[1].text.strip()
             # смотрим следующий тэг
             first_row_date2 = date_list[1].find_element(By.XPATH, 'following-sibling::*[1]')
             # Id игры после смены даты
             a_tag = first_row_date2.find_element(By.CLASS_NAME, 'line-event__name')
             game_id_date2 = Utils.get_id(a_tag, 'ts=24')
-        return date1, date2, game_id_date2
+
+        return today_date, tomorrow_date, game_id_date2
 
     def _parse_game(self, row: WebElement) -> SaveResultDto:
         """Парсинг игры"""
@@ -159,7 +169,7 @@ class GamesParser:
         save_result_dto = SaveResultDto(row_area, header_line, self.__first_row)
         return save_result_dto
 
-    def _write_left_header(self, line_full_id: str, game_name: str, date_parce: str, excel_row_index: int, row: WebElement) -> None:
+    def _write_left_header(self, line_full_id: str, game_name: str, date_game: date, excel_row_index: int, row: WebElement) -> None:
         """Левая шапка. Получение и запись в Excel"""
 
         # Время игры
@@ -171,13 +181,6 @@ class GamesParser:
         team1 = teams[0].text.strip()
         team2 = teams[1].text.strip()
 
-        # Дата в формате: dd.mm
-        date_current: date = date.today()  # Текущая дата без времени
-        year_current: int = date_current.year  # Текущий год
-        date_parce_list = date_parce.split(' ')
-        date_number: int = int(date_parce_list[0].strip())  # Номер даты
-        date_month: int = months.index(date_parce_list[1].strip()[:3].lower()) + 1  # Номер месяца
-        date_game: date = date(year_current, date_month, date_number)  # Текущая дата (полная)
         date_game_report: str = date_game.strftime('%d.%m.%Y')  # Дата для отчёта
         index_weekday: int = date_game.weekday()
         weekday = dws[index_weekday]  # День недели
