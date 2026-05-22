@@ -7,8 +7,8 @@ from xlrd.sheet import Sheet
 from xlutils.copy import copy
 from xlwt import Workbook, Worksheet, add_palette_colour, easyxf
 
-from . import Utils
-from .utils import RESULT_FIRST_TIME_COLUMN_INDEX, RESULT_TOTAL_COLUMN_INDEX
+from .utils import RESULT_FIRST_TIME_COLUMN_INDEX, RESULT_TOTAL_COLUMN_INDEX, get_date_stamp_by_date, get_yesterday, \
+    get_filename
 
 add_palette_colour("empty_color", 0x21)
 add_palette_colour("gold_color", 0x22)
@@ -94,7 +94,7 @@ class ExcelManager:
         files = os.listdir(RESULTS_FOLDER_NAME)
 
         # Файл коэффициентов прошлого дня (берем первый со вчерашней датой)
-        date_stamp = Utils.get_date_stamp_by_date(date)
+        date_stamp = get_date_stamp_by_date(date)
 
         # Поиск файла вчерашнего
         filename = ''
@@ -105,7 +105,7 @@ class ExcelManager:
 
     @staticmethod
     def get_yesterday_filename() -> str:
-        return ExcelManager.get_filename_by_date(Utils.get_yesterday())
+        return ExcelManager.get_filename_by_date(get_yesterday())
 
     @staticmethod
     def get_today_filename(day_offset: int = 0) -> str:
@@ -116,5 +116,5 @@ class ExcelManager:
 
     @staticmethod
     def _get_result_filename(day_offset: int = 0) -> str:
-        filename = Utils.get_filename(day_offset)
+        filename = get_filename(day_offset)
         return os.path.join(RESULTS_FOLDER_NAME, filename + '.xls')

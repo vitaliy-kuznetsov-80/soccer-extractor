@@ -6,14 +6,14 @@ import traceback
 from src import ExcelManager
 from src.page import Page
 from src.parcer.results_parser import ResultParser
-from src.utils import Config, Utils
+from src.utils import Config, get_url_date, get_yesterday
 from src.utils import Logger
 
 # Url результата
 url: str = 'results/soccer'
 
 class Results:
-    """Основной класс программы для сбора результвтов матчей"""
+    """Основной класс программы для сбора результатов матчей"""
     __conf: Config
     __log: Logger
 
@@ -26,7 +26,7 @@ class Results:
     def run(self):
         self.__log.print(f"Старт: Сбор результатов: {datetime.now()}", True)
 
-        # Получение имени файла и проверка наличия вечрашнего дня
+        # Получение имени файла и проверка наличия вчерашнего дня
         excel_filename = ExcelManager.get_yesterday_filename()
         if not excel_filename:
             self.__log.print("Файл вчерашнего дня не найден", True)
@@ -35,7 +35,8 @@ class Results:
         start_time = datetime.now()
 
         def parce_results(_url: str) -> None:
-            page = Page(_url, self.__conf, self.__log, 'results-champ')
+            page = Page(_url, self.__conf, self.__log)
+            page.init('results-champ')
 
             rp = ResultParser(self.__log)
             rp.parce_results(page)
@@ -44,8 +45,8 @@ class Results:
             page.close()
 
         try:
-            url_yesterday = url + '?date=' + Utils.get_url_date(Utils.get_yesterday()) # Url вчерашнего дня
-            url_today = url + '?date=' + Utils.get_url_date(datetime.now()) # Url сегодняшнего дня
+            url_yesterday = url + '?date=' + get_url_date(get_yesterday()) # Url вчерашнего дня
+            url_today = url + '?date=' + get_url_date(datetime.now()) # Url сегодняшнего дня
 
             parce_results(url_yesterday) # Парсинг вчера
             parce_results(url_today) # Парсинг сегодня
@@ -53,7 +54,7 @@ class Results:
             end_time = datetime.now()
             self.__log.print('Конец: Сбор результатов', True)
             self.__log.print('Время работы: ' + str(end_time - start_time), True)
-        except Exception as e: # pylint: disable=broad-except
+        except Exception: # pylint: disable=broad-except
             self.__print_error()
         finally:
             self.__log.close_file()

@@ -1,4 +1,4 @@
-from .utils import Utils
+from .utils import *
 from .config import Config
 from .logger import Logger
 from .excel_manager import ExcelManager

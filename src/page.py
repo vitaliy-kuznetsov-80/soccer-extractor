@@ -21,7 +21,7 @@ class Page:
     container: WebElement
     conf: Config
 
-    def __init__(self, url: str, conf: Config, log: Logger, redy_content_class: str):
+    def __init__(self, url: str, conf: Config, log: Logger):
         self.url = BASE_URL + url
         self.log = log
         self.conf = conf
@@ -31,13 +31,14 @@ class Page:
         result: bool = self._get_page() # Получить DOM дерево
         if not result: raise TimeoutException('Не удалось получить страницу')
 
+    def init(self, ready_content_class: str) -> None:
         self._close_dialogs()  # Закрытие диалогов
         self._set_msk()  # Выбор часового пояса МСК
-        self._get_container()  # Получение контенера для игр
+        self._get_container()  # Получение контейнера для игр
 
         # Ожидание прогрузки контента
         time.sleep(1)
-        self.wait(By.CLASS_NAME, redy_content_class)
+        self.wait(By.CLASS_NAME, ready_content_class)
         self.log.print('Контент загружен')
 
     def click(self, element: WebElement) -> None:
@@ -73,9 +74,9 @@ class Page:
     # --- Private
 
     def _get_container(self) -> None:
-        """Контенер, где находятся все игры (div class="container") (для сокращения времени поиска)"""
-        conteiner = self.drv.find_element(By.CLASS_NAME, 'container')
-        self.container = conteiner
+        """Контейнер, где находятся все игры (div class="container") (для сокращения времени поиска)"""
+        container = self.drv.find_element(By.CLASS_NAME, 'container')
+        self.container = container
         self.log.print('Контейнер получен')
 
     def _close_dialogs(self) -> None:
@@ -88,13 +89,13 @@ class Page:
         except NoSuchElementException:
             self.log.print('Кнопка куки не найдена')
 
-        # Кнопка уведомленния
+        # Кнопка уведомления
         try:
             confirm_buttons = self.drv.find_elements(By.CLASS_NAME, 'push-confirm__button')
             if len(confirm_buttons) > 0:
                 confirm_buttons[0].click()
         except NoSuchElementException:
-            self.log.print('Кнопка уведомленния не найдена')
+            self.log.print('Кнопка уведомления не найдена')
 
         time.sleep(0.5)
         self.log.print('Диалоги закрыты')
@@ -106,18 +107,47 @@ class Page:
         self.click(button_settings)
 
         # Ждём загрузки окна
-        self.wait(By.CLASS_NAME, 'settings__body')
+        body_class_name = 'pa-settings__section'
+        self.wait(By.CLASS_NAME, body_class_name)
+        time.sleep(1)
+        body = self.drv.find_element(By.CLASS_NAME, body_class_name)
+
+        # Щелчок на пункте выбора региона
+        setting_buttons_class_name = 'pa-list-item__content'
+        self.wait(By.CLASS_NAME, setting_buttons_class_name)
+        setting_buttons = body.find_elements(By.CLASS_NAME, setting_buttons_class_name)
+        for setting_button in setting_buttons:
+            content = setting_button.text
+            if 'часовой пояс' in content.lower():
+                setting_button.click()
+                break
+
+        # Открываем диалог регионов
+        region_list_class_name = 'pa-selection-list'
+        self.wait(By.CLASS_NAME, region_list_class_name)
+        region_list = self.drv.find_element(By.CLASS_NAME, region_list_class_name)
+        time.sleep(1)
 
         # Выбираем Москву
-        body = self.drv.find_element(By.CLASS_NAME, 'settings__body')
-        path = "//span[@class='select-dropdown__item' and contains(text(),'Москва')]"
-        drop_down_item = body.find_element(By.XPATH, path)
-        self.click(drop_down_item)
+        region_items_class_name = 'pa-list-item'
+        self.wait(By.CLASS_NAME, region_items_class_name)
+        region_items = region_list.find_elements(By.CLASS_NAME, region_items_class_name)
+        for region_item in region_items:
+            content = region_item.text
+            if 'москва' in content.lower():
+                self.log.print('Москва выбрана')
+                region_item.click()
+                break
         time.sleep(1)
 
         # Сохраняем
-        button_save = self.drv.find_element(By.CLASS_NAME, 'settings-footer-button_save')
-        self.click(button_save)
+        setting_buttons = self.drv.find_elements(By.CLASS_NAME, 'pa-settings__button')
+        for setting_button in setting_buttons:
+            content = setting_button.text
+            if 'сохранить' in content.lower():
+                setting_button.click()
+                break
+        time.sleep(1)
 
         self.wait_base_content()
 
@@ -146,7 +176,7 @@ class Page:
 
         self.drv.maximize_window() # Полноэкранный режим
 
-        self.drv.set_page_load_timeout(self.conf.page_load_timeout) # Тамаут принудительной оставновки загрузки
+        self.drv.set_page_load_timeout(self.conf.page_load_timeout) # Таймаут принудительной остановки загрузки
 
         # Получение страницы с политикой retry
         for attempt in range(self.conf.retry_count):
@@ -168,6 +198,9 @@ class Page:
                     return False
         return False
 
+    def get_screenshot(self, filename: str) -> None:
+        self.drv.get_screenshot_as_file(filename)
+
     @staticmethod
     def __config_browser() -> Options:
         """Конфигурация браузера"""
@@ -178,10 +211,12 @@ class Page:
         options.add_argument("disable-infobars")
         options.add_argument('-disable-dev-shm-usage')
         options.add_argument("--disable-extensions")
+        options.add_argument("--disable-notifications")
         options.add_argument("--blink-settings=imagesEnabled=false")
         options.add_experimental_option('excludeSwitches', ['disable-popup-blocking'])
         options.add_experimental_option("prefs", {
             "profile.managed_default_content_settings.images": 2,
             'media_stream': 2,
+            "profile.default_content_setting_values.notifications": 2  # 2 = Block
         })
         return options

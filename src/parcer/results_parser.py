@@ -6,12 +6,14 @@ from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
-from ..utils import Logger
-from ..utils import Utils
-from ..utils import ExcelManager
+from ..utils import (Logger,
+                     RESULT_COMMENT,
+                     RESULT_FIRST_TIME_COLUMN_INDEX,
+                     RESULT_TOTAL_COLUMN_INDEX,
+                     ExcelManager,
+                     get_id
+                     )
 from ..page import Page
-from ..utils.utils import RESULT_COMMENT, RESULT_FIRST_TIME_COLUMN_INDEX, RESULT_TOTAL_COLUMN_INDEX
-
 
 @dataclass
 class _ResultDto:
@@ -65,7 +67,7 @@ class ResultParser:
 
             row_container = target_a.find_element(By.XPATH, '..//..') # Контейнер строки (назад на 2 родителя)
             result = _ResultDto()
-            result.id = Utils.get_id(target_a).strip()
+            result.id = get_id(target_a).strip()
             result.time = row_container.find_element(By.CLASS_NAME, 'results-event__time').text.strip()
             teams = target_a.text.split(' — ')
             result.team_1 = teams[0].strip()

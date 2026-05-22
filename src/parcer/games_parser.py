@@ -10,8 +10,7 @@ from .Header import HeaderLine
 from .params_parser import SaveResultDto, ParamsParser
 from src.dto.game_dto import GameDto
 from ..dto import ParceResultsDto
-from ..utils import Logger
-from ..utils import Utils
+from ..utils import Logger, get_id
 from ..utils import ExcelManager
 from ..page import Page
 
@@ -56,14 +55,19 @@ class GamesParser:
             # Строки игр в линии
             rows = line.find_elements(By.CLASS_NAME, 'line-event')
 
+            game_count = len(rows)
+
             # Цикл по играм
             game_date = date1
             for row in rows:
                 # Получение полного Id игры (для лога и отладки)
-                game_full_id = Utils.get_id(row.find_element(By.TAG_NAME, 'a'), 'ts=24')
+                game_full_id = get_id(row.find_element(By.TAG_NAME, 'a'), 'ts=24')
                 # Поиск конкретной игры, если есть
                 if only_id and game_full_id != only_id:
                     continue
+
+                # Скролл к игре
+                self.__page.drv.execute_script("arguments[0].scrollIntoView();", row)
 
                 # Смена даты
                 if game_id_date2 == game_full_id:
@@ -83,13 +87,26 @@ class GamesParser:
                     self.__log.print("Игра пустая. Пропуск")
                     continue
 
-                # Клик по раскрывашке (правая колонка)
-                self.__page.click(button_play)
-                is_exist = True
+                is_game_exist_path_name = "//span[starts-with(., 'Тотал')]"
+
+                # Если 1 игра, то проверяем не раскрыта ли она
+                is_one_not_expand = True
+                if game_count == 1:
+                    try:
+                        self.__page.wait(By.XPATH, is_game_exist_path_name)
+                        is_one_not_expand = False
+                    except (NoSuchElementException, StaleElementReferenceException, TimeoutException,
+                            WebDriverException):
+                        is_one_not_expand = True
+
+                # Клик по раскрывашке (правая колонка), если игра не раскрыта
+                if is_one_not_expand:
+                    self.__page.click(button_play)
 
                 # Ожидаем прогрузки по названию таблицы нижней части коэффициентов (должна быть всегда)
+                is_exist = True
                 try:
-                    self.__page.wait(By.XPATH, "//span[starts-with(., 'Тотал')]")
+                    self.__page.wait(By.XPATH, is_game_exist_path_name)
                 except (NoSuchElementException, StaleElementReferenceException, TimeoutException, WebDriverException):
                     is_exist = False
                     self.__log.print("Игра отсутствует. Таймаут")
@@ -157,7 +174,7 @@ class GamesParser:
             first_row_date2 = date_list[1].find_element(By.XPATH, 'following-sibling::*[1]')
             # Id игры после смены даты
             a_tag = first_row_date2.find_element(By.CLASS_NAME, 'line-event__name')
-            game_id_date2 = Utils.get_id(a_tag, 'ts=24')
+            game_id_date2 = get_id(a_tag, 'ts=24')
 
         return today_date, tomorrow_date, game_id_date2
 
@@ -183,7 +200,7 @@ class GamesParser:
 
         date_game_report: str = date_game.strftime('%d.%m.%Y')  # Дата для отчёта
         index_weekday: int = date_game.weekday()
-        weekday = dws[index_weekday]  # День недели
+        weekday: str = dws[index_weekday]  # День недели
 
         self.__log.print('\n' + str(excel_row_index - 1) + ': ' +
                          date_game.strftime('%d.%m.%y') + ' ' + time_game + ': ' +

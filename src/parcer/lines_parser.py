@@ -6,8 +6,7 @@ from selenium.webdriver.common.by import By
 from ..dto import ParceResultsDto
 from ..dto.line_dto import LineDto
 from ..dto.region_enum import RegionEnum
-from ..utils import Utils
-from ..utils import Logger
+from ..utils import Logger, normalize_text, get_id, get_text_list
 from ..page import Page
 
 class LinesParser:
@@ -44,18 +43,18 @@ class LinesParser:
         for row in rows:
             a_tag = row.find_element(By.CLASS_NAME, 'champs__champ-name')
             line_name = a_tag.text.strip()
-            line_name_compare = Utils.normalize_text(line_name)
+            line_name_compare = normalize_text(line_name)
 
             # Проверка вхождения слов
             in_ignore = False
             for item in ignore_list:
-                if Utils.normalize_text(item) in line_name_compare:
+                if normalize_text(item) in line_name_compare:
                     in_ignore = True
                     break
 
             in_white = False
             for item in white_list:
-                if Utils.normalize_text(item) in line_name_compare:
+                if normalize_text(item) in line_name_compare:
                     in_white = True
                     break
 
@@ -86,7 +85,7 @@ class LinesParser:
 
             # Ссылка на линию с названием
             a_tag = row.find_element(By.CLASS_NAME, 'champs__champ-name')
-            line_id = Utils.get_id(a_tag, 'ts=24')
+            line_id = get_id(a_tag, 'ts=24')
             # Поиск конкретной линии, если есть
             if only_id and line_id != only_id: continue
 
@@ -136,12 +135,12 @@ class LinesParser:
     @staticmethod
     def _get_ignore_list() -> list[str]:
         """Список фраз - исключений"""
-        return Utils.get_text_list('ignore-soccer.txt')
+        return get_text_list('ignore-soccer.txt')
 
     @staticmethod
     def _get_white_list(region: RegionEnum) -> list[str]:
         """Белый список"""
-        return Utils.get_text_list(str(region.value) + '.txt')
+        return get_text_list(str(region.value) + '.txt')
 
     def _get_lines(self) -> list[WebElement]:
         # Таблица парсинга. Берём только левую (СОБЫТИЯ)

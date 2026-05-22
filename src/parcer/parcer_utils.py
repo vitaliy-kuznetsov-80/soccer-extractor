@@ -4,10 +4,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.common import NoSuchElementException
 
-from src import Utils, Logger
+from src import Logger
 from src.dto.mb_dto import MB
 from src.dto.game_row_dto import GameRowsDto
-
+from src.utils import clean_text
 
 class ParserUtils:
     @staticmethod
@@ -42,7 +42,7 @@ class ParserUtils:
 
         # Считываем строки
         for row in table:
-            row_text = (Utils.clean_text(row.text.strip())
+            row_text = (clean_text(row.text.strip())
                         .replace(' (', '(')
                         .replace('Не забьет', 'Незабьет')
                         .replace('Не будет', 'Небудет')

@@ -1,17 +1,19 @@
 """Основная программа"""
+import os
 from datetime import datetime
 import sys
 import time
 import traceback
 
-from src.dto.k_matrix_gold_dto import MatrixGoldRegionDto, load_from_json
+# from src.dto.k_matrix_gold_dto import MatrixGoldRegionDto, load_from_json
 from src.dto.parce_results_dto import ParceResultsDto
 from src.dto.region_enum import RegionEnum
 from src.page import Page
-from src.utils import Config
+from src.utils import Config, get_filename
 from src.utils import Logger
 from src.parcer import LinesParser
 from src.parcer import GamesParser
+from src.utils.logger import LOGS_FOLDER_NAME
 
 # Url списка линий
 url: str = 'line/soccer?ts=24'
@@ -39,7 +41,8 @@ class Main:
             # k_matrix_gold = load_from_json(self.__region, "assets/europe.json")
 
             # Получение страницы
-            self.__page = Page(url, self.__conf, self.__log, 'champs__sport')
+            self.__page = Page(url, self.__conf, self.__log)
+            self.__page.init('champs__sport')
 
             parce_result = ParceResultsDto(self.__region, self.__region_name, self.__page, self.__log, self.__conf, self.__page.container)
 
@@ -64,8 +67,10 @@ class Main:
             # parce_result.save('')
 
             time.sleep(1)
-        except Exception as e: # pylint: disable=broad-except
+        except Exception: # pylint: disable=broad-except
             self.__print_error()
+            filename = os.path.join(LOGS_FOLDER_NAME, get_filename() + '_error_screen.png')
+            self.__page.get_screenshot(filename)
         finally:
             self.__page.close()
             self.__log.close_file()
@@ -83,4 +88,4 @@ class Main:
 
         for trace in trace_back:
             self.__log.print(
-                'File: {}, Line: {:d}, Func.Name: {}, Message: {}'.format(trace[0], trace[1], trace[0], trace[3]))
+                'File: {}, Line: {:d}, Func.Name: {}, Message: {}'.format(trace[0], trace[1], trace[2], trace[3]))

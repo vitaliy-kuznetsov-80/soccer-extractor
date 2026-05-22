@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
-from src import Utils
+from src.utils import clean_text
 
 @dataclass
 class HeaderLine:
@@ -33,7 +33,7 @@ class HeaderLine:
         # Извлечения текста из списка тэгов
         header_line = []
         for item in header_list:
-            header_line.append(Utils.clean_text(item.text))
+            header_line.append(clean_text(item.text))
 
 
         return HeaderLine(

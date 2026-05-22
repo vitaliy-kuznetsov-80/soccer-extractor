@@ -3,8 +3,7 @@ import os
 from logging import Logger as DefLogger, FileHandler
 from pathlib import Path
 
-from . import Utils
-from . import Config
+from . import Config, get_filename
 
 LOGS_FOLDER_NAME = 'logs'
 
@@ -46,7 +45,7 @@ class Logger:
         Returns:
             Полный путь к файлу лога.
         """
-        filename = Utils.get_filename(self.__conf.day_offset)
+        filename = get_filename(self.__conf.day_offset)
         return  os.path.join(LOGS_FOLDER_NAME, filename + '_' + postfix + '.log')
 
     def print(self, value: str, in_console: bool = False):
