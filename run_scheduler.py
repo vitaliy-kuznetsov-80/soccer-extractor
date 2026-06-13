@@ -1,25 +1,43 @@
 from schedule import run_pending, every
 from datetime import datetime
 import time
+import sched
 
 from main import Main
 from main_results import Results
 from src.dto.region_enum import RegionEnum
 from src.utils import Config
 
+scheduler = sched.scheduler(time.time, time.sleep)
+
 print(f"Старт планировщика в: {datetime.now()}")
 
+def run_region(region: RegionEnum, retry_count=0):
+    main = Main(region)
+    try:
+        main.run()
+    except Exception:
+        # Повторный запуск на основе retry политики
+
+        retry_count += 1
+
+        if retry_count > conf.retry_count:
+            print('Ошибка парсинга в ' + str(region).capitalize() + '. Конец')
+            return
+
+        print('Ошибка парсинга в ' + str(region).capitalize() + '. Повтор № ' + str(retry_count))
+
+        scheduler.enter(conf.scheduler_retry_period, 1, run_region, argument=(region, retry_count)) # conf.scheduler_retry_period
+        scheduler.run()
+
 def run_europe():
-    main = Main(RegionEnum.EUROPE)
-    main.run()
+    run_region(RegionEnum.EUROPE)
 
 def run_america():
-    main = Main(RegionEnum.AMERICA)
-    main.run()
+    run_region(RegionEnum.AMERICA)
 
 def run_asia():
-    main = Main(RegionEnum.ASIA)
-    main.run()
+    run_region(RegionEnum.ASIA)
 
 def run_results():
     results = Results()

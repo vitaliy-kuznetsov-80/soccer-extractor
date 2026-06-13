@@ -12,7 +12,7 @@ from src.dto.game_dto import GameDto
 from ..dto import ParceResultsDto
 from ..utils import Logger, get_id
 from ..utils import ExcelManager
-from ..page import Page
+from src.page.page import Page
 
 months = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
 dws = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС']

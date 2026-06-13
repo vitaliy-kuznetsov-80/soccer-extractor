@@ -7,7 +7,7 @@ from ..dto import ParceResultsDto
 from ..dto.line_dto import LineDto
 from ..dto.region_enum import RegionEnum
 from ..utils import Logger, normalize_text, get_id, get_text_list
-from ..page import Page
+from src.page.page import Page
 
 class LinesParser:
     """Загрузка игр линий"""

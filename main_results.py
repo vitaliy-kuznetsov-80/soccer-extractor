@@ -4,7 +4,7 @@ import sys
 import traceback
 
 from src import ExcelManager
-from src.page import Page
+from src.page.page import Page
 from src.parcer.results_parser import ResultParser
 from src.utils import Config, get_url_date, get_yesterday
 from src.utils import Logger

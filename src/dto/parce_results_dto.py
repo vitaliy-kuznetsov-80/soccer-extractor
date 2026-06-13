@@ -7,7 +7,7 @@ from .k_matrix_gold_dto import MatrixGoldRegionDto
 from .line_dto import LineDto
 from .region_enum import RegionEnum
 from src.utils import Logger, Config
-from src.page import Page
+from src.page.page import Page
 
 @dataclass
 class ParceResultsDto:

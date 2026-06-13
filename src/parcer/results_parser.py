@@ -13,7 +13,7 @@ from ..utils import (Logger,
                      ExcelManager,
                      get_id
                      )
-from ..page import Page
+from src.page.page import Page
 
 @dataclass
 class _ResultDto:

@@ -15,6 +15,8 @@ AMERICA_START_TIME: str = 'america'
 ASIA_START_TIME: str = 'asia'
 RESULTS_START_TIME: str = 'results'
 DAY_OFFSET: str = 'day_offset'
+SCHEDULER_RETRY_COUNT: str = 'count'
+SCHEDULER_RETRY_PERIOD: str = 'period'
 
 class Config:
     """
@@ -34,6 +36,8 @@ class Config:
     __asia_start_time: str
     __results_start_time: str
     __day_offset: int
+    __scheduler_retry_count: int
+    __scheduler_retry_period: int
 
     @property
     def page_load_timeout(self) -> float:
@@ -86,6 +90,13 @@ class Config:
     @property
     def day_offset(self) -> int:
         return self.__day_offset
+    @property
+    def scheduler_retry_count(self) -> int:
+        return self.__scheduler_retry_count
+
+    @property
+    def scheduler_retry_period(self) -> int:
+        return self.__scheduler_retry_period
 
     def __init__(self):
         with open('config/appsettings.json', encoding='utf-8') as file:
@@ -95,6 +106,7 @@ class Config:
             g: dict[str, str] = data['general']
             d: dict[str, str] = data['debug']
             s: dict[str, str] = data['scheduler']
+            s_r: dict[str, str] = s['retry']
 
             # General
             self.__page_load_timeout = int(g[PAGE_LOAD_TIMEOUT])
@@ -114,6 +126,8 @@ class Config:
             self.__america_start_time = s[AMERICA_START_TIME]
             self.__results_start_time = s[RESULTS_START_TIME]
             self.__day_offset = int(s[DAY_OFFSET])
+            self.__scheduler_retry_count = int(s_r[SCHEDULER_RETRY_COUNT])
+            self.__scheduler_retry_period = int(s_r[SCHEDULER_RETRY_PERIOD])
 
             # Локальный JSON. Заполняем только существующие поля
             file_local_path = Path('config/appsettings.local.json')
@@ -141,3 +155,7 @@ class Config:
                     if AMERICA_START_TIME in sl: self.__america_start_time = sl[AMERICA_START_TIME]
                     if RESULTS_START_TIME in sl: self.__results_start_time = sl[RESULTS_START_TIME]
                     if DAY_OFFSET in sl: self.__day_offset = int(sl[DAY_OFFSET])
+                    if 'retry' in sl:
+                        sl_r: dict[str, str] = sl['retry']
+                        if SCHEDULER_RETRY_COUNT in sl_r: self.__scheduler_retry_count = int(sl_r[SCHEDULER_RETRY_COUNT])
+                        if SCHEDULER_RETRY_PERIOD in sl_r: self.__scheduler_retry_period = int(sl_r[SCHEDULER_RETRY_PERIOD])

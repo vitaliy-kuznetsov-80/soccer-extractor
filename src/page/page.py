@@ -9,9 +9,19 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 
-from .utils import Logger
-from .utils import Config
-from .utils.utils import BASE_URL
+from src.utils import Logger
+from src.utils import Config
+from src.utils.utils import BASE_URL
+
+def click_in_list_by_text(elements: list[WebElement], text: str) -> None:
+    result = False
+    for element in elements:
+        if text.lower() in element.text.lower():
+            result = True
+            element.click()
+            break
+    if not result:
+        raise TimeoutException('Не найден элемент списка с текстом: ' + text)
 
 class Page:
     """Страница"""
@@ -33,7 +43,7 @@ class Page:
 
     def init(self, ready_content_class: str) -> None:
         self._close_dialogs()  # Закрытие диалогов
-        self._set_msk()  # Выбор часового пояса МСК
+        self._set_region_by_name('москва') # Выбор часового пояса МСК
         self._get_container()  # Получение контейнера для игр
 
         # Ожидание прогрузки контента
@@ -67,15 +77,68 @@ class Page:
             self.log.print('Элемент не скрылся: ' + find_element)
             raise TimeoutException('Элемент не скрылся: ' + find_element)
 
+    def get_screenshot(self, filename: str) -> None:
+        """Снятие скриншота"""
+        self.drv.get_screenshot_as_file(filename)
+
     def close(self):
         """Закрытие страницы"""
-        self.drv.close()
+        for handle in self.drv.window_handles:
+            self.drv.switch_to.window(handle)
+            self.drv.close()
+        self.drv.quit()
+
+    def find_element_by_class(self, class_name: str, parent: WebElement = None) -> WebElement:
+        """Поиск элемента по имени класса с ожиданием"""
+        self.wait(By.CLASS_NAME, class_name)
+        if parent is None: parent = self.drv
+
+        return parent.find_element(By.CLASS_NAME, class_name)
+
+    def find_elements_by_class(self, class_name: str, parent: WebElement = None) -> list[WebElement]:
+        """Поиск элементов по имени класса с ожиданием"""
+        self.wait(By.CLASS_NAME, class_name)
+        if parent is None: parent = self.drv
+
+        return parent.find_elements(By.CLASS_NAME, class_name)
+
+    def find_element_and_click_by_class(self, class_name: str, text: str, parent: WebElement = None) -> None:
+        """Поиск элементов по имени класса `class_name` с ожиданием и клик по одному из найденных, по контенту `text`"""
+        elements = self.find_elements_by_class(class_name, parent)
+        click_in_list_by_text(elements, text)
+        time.sleep(1)
 
     # --- Private
 
+    def _set_region_by_name(self, region_name: str) -> None:
+        """Выбор часового пояса"""
+
+        # 1. Щелчок по кнопке настроек
+        self.find_element_by_class('sub-header__icon-settings').click()
+
+        # 2. Ждём загрузки окна настроек
+        settings_dialog_body = self.find_element_by_class('pa-settings__section')
+
+        # 3. Щелчок по кнопке выбора региона
+        self.find_element_and_click_by_class('pa-list-item__content', 'часовой пояс', settings_dialog_body)
+
+        # 4. Открываем диалог регионов
+        region_list = self.find_element_by_class('pa-selection-list')
+
+        # 5. Выбираем регион
+        self.find_element_and_click_by_class('pa-list-item', region_name, region_list)
+
+        # 5. Жмём кнопку Сохранить
+        self.find_element_and_click_by_class('pa-settings__button', 'сохранить')
+
+        # 6. Ждём загрузки контента
+        self._wait_base_content()
+
+        self.log.print('Выбран часовой пояс: ' + region_name)
+
     def _get_container(self) -> None:
         """Контейнер, где находятся все игры (div class="container") (для сокращения времени поиска)"""
-        container = self.drv.find_element(By.CLASS_NAME, 'container')
+        container = self.find_element_by_class('container')
         self.container = container
         self.log.print('Контейнер получен')
 
@@ -100,60 +163,7 @@ class Page:
         time.sleep(0.5)
         self.log.print('Диалоги закрыты')
 
-    def _set_msk(self) -> None:
-        """Выбор часового пояса МСК"""
-        # Кнопка настроек
-        button_settings = self.drv.find_element(By.CLASS_NAME, 'sub-header__icon-settings')
-        self.click(button_settings)
-
-        # Ждём загрузки окна
-        body_class_name = 'pa-settings__section'
-        self.wait(By.CLASS_NAME, body_class_name)
-        time.sleep(1)
-        body = self.drv.find_element(By.CLASS_NAME, body_class_name)
-
-        # Щелчок на пункте выбора региона
-        setting_buttons_class_name = 'pa-list-item__content'
-        self.wait(By.CLASS_NAME, setting_buttons_class_name)
-        setting_buttons = body.find_elements(By.CLASS_NAME, setting_buttons_class_name)
-        for setting_button in setting_buttons:
-            content = setting_button.text
-            if 'часовой пояс' in content.lower():
-                setting_button.click()
-                break
-
-        # Открываем диалог регионов
-        region_list_class_name = 'pa-selection-list'
-        self.wait(By.CLASS_NAME, region_list_class_name)
-        region_list = self.drv.find_element(By.CLASS_NAME, region_list_class_name)
-        time.sleep(1)
-
-        # Выбираем Москву
-        region_items_class_name = 'pa-list-item'
-        self.wait(By.CLASS_NAME, region_items_class_name)
-        region_items = region_list.find_elements(By.CLASS_NAME, region_items_class_name)
-        for region_item in region_items:
-            content = region_item.text
-            if 'москва' in content.lower():
-                self.log.print('Москва выбрана')
-                region_item.click()
-                break
-        time.sleep(1)
-
-        # Сохраняем
-        setting_buttons = self.drv.find_elements(By.CLASS_NAME, 'pa-settings__button')
-        for setting_button in setting_buttons:
-            content = setting_button.text
-            if 'сохранить' in content.lower():
-                setting_button.click()
-                break
-        time.sleep(1)
-
-        self.wait_base_content()
-
-        self.log.print('Выбран часовой пояс МСК')
-
-    def wait_base_content(self) -> None:
+    def _wait_base_content(self) -> None:
         """Загрузка основного контента"""
         time.sleep(1)
         self.wait(By.CLASS_NAME, 'container')
@@ -184,7 +194,7 @@ class Page:
                 self.log.print('Попытка получения страницы: ' + str(attempt + 1))
                 self.drv.get(self.url) # Запрос получения страниц
                 self.log.print('Страница получена')
-                self.wait_base_content()
+                self._wait_base_content()
                 self.log.print('Страница загружена')
                 return True
             except TimeoutException:
@@ -197,9 +207,6 @@ class Page:
                     self.drv.quit()
                     return False
         return False
-
-    def get_screenshot(self, filename: str) -> None:
-        self.drv.get_screenshot_as_file(filename)
 
     @staticmethod
     def __config_browser() -> Options:

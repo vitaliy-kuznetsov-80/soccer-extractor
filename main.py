@@ -8,7 +8,7 @@ import traceback
 # from src.dto.k_matrix_gold_dto import MatrixGoldRegionDto, load_from_json
 from src.dto.parce_results_dto import ParceResultsDto
 from src.dto.region_enum import RegionEnum
-from src.page import Page
+from src.page.page import Page
 from src.utils import Config, get_filename
 from src.utils import Logger
 from src.parcer import LinesParser
@@ -71,6 +71,7 @@ class Main:
             self.__print_error()
             filename = os.path.join(LOGS_FOLDER_NAME, get_filename() + '_error_screen.png')
             self.__page.get_screenshot(filename)
+            raise
         finally:
             self.__page.close()
             self.__log.close_file()
